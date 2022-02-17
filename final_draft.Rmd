@@ -10,6 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(edld652)
+library(tidyverse)
+library(janitor)
+```
 
+```{r state-data-viz1}
+urlfile = "https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv"
+
+state <- read_csv(url(urlfile))
 ```
 
