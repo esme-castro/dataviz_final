@@ -13,7 +13,39 @@ knitr::opts_chunk$set(echo = TRUE)
 library(edld652)
 library(tidyverse)
 library(janitor)
+library(here)
+library(rio)
 ```
+
+Esme, can you figure out how to join the CLASS data set with the joined grad_rates dataframe? When I tried to left join, it produced all NAs for the class columns. Also, see note in fiscal-data code chunk... Did Daniel show you a way to get around these large file sizes? We need all years of that fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finaized df.
+
+```{r load-data}
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names() # CLASS Data Set
+class <- class %>% 
+  rename(fips = stfips,
+         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
+
+grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
+  janitor::clean_names() # graduation rates (and cohorts)
+
+state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+
+grad_rates <- grad_rates %>% 
+  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
+
+grad_rates <- left_join(grad_rates, state_info) # this has graduation rates and state information
+
+```
+
+```{r fiscal-data}
+fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
+  janitor::clean_names() # Esme, this is JUST 2010 fiscal data. It is a huge data set... We still need to import and merge all of these together and then to other dataset... Didn't Dr. Anderson show you how to get around this??
+
+```
+
+
+
 
 ```{r state-data-viz1}
 urlfile = "https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv"
