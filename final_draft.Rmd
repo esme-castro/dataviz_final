@@ -57,6 +57,34 @@ state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
 data <- left_join(class_grads, state_info) # this has grad rates and state info
 ```
 
+```{r fiscal-data}
+fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2012") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2013") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2014") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2015") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2016") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2017") %>% 
+  janitor::clean_names()
+
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2018") %>% 
+  janitor::clean_names()
+```
 
 
 
