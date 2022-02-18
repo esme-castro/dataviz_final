@@ -98,10 +98,18 @@ maps <- left_join(state_info, maps, by = "state")
 # this works, but the df is so large that you cannot view the df.
 class_grads.1 <- left_join(class_grads, maps, by = "state")
 # if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
-
-
-
-
 ```
 
+```{r parquet-files}
+# first read in the data
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names()
+
+# write it out as a parquet file
+arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
+
+# read it in again
+class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
+
+```
 
