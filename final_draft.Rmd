@@ -19,24 +19,53 @@ library(maps)
 ```
 
 ```{r load-data}
+######## Load CLASS data, clean, & select columns ########################
 class <- import(here("data", "Class20032019.xlsx")) %>% 
   janitor::clean_names() # CLASS Data Set
+
 class <- class %>% 
   rename(fips = stfips,
-         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
+         state_abbr = state) # make class data a fips to match grad_rates df, same with the state abbreviation.
+
+class <- class %>% 
+  select(1:3, 6, 18, 47)
+
+######## Load grad_rates, clean, & select columns ##########################
 grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
   janitor::clean_names() # graduation rates (and cohorts)
-
-state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
 grad_rates <- grad_rates %>% 
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
-grad_rates <- left_join(grad_rates, state_info) # this has graduation rates and state information
+grad_rates <- grad_rates %>% 
+  select(1:8, 10, 12:27, 30)
 
+####### Merge CLASS with grad_rates df ######################################
 class_grads <- left_join(grad_rates, class, by = "fips") # class df w/ grad rates&state
+
+####### Load state_info, clean, & select columns ############################
+state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+
+state_info <- state_info %>% 
+   mutate(state_name = tolower(state_name)) %>% 
+    rename(state = state_name)
+
+state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
+# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
+
+###### Merge class_grads with state_info data ##################################
+data <- left_join(class_grads, state_info) # this has grad rates and state info
 ```
 
+
+
+
+
+
+
+
+
+<!-- Working on fiscal data here -->
 Did Daniel show you a way to get around these large file sizes? We need all years of that fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finaized df.
 ```{r fiscal-data}
 fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
@@ -49,8 +78,25 @@ fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>%
 fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
   janitor::clean_names()
 
+fiscal_df <- get_fiscal_data()
+
+arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
+
+
+## using code below as reference for fiscal data, do not remove yet #####
+# first read in the data
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names()
+
+# write it out as a parquet file
+arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
+
+# read it in again
+class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
 ```
 
+
+<!-- ignore below code chunk, this was trying to get geo data, use first code chunk above instead of final project data -->
 ################## Below is what I have tried to do to merge all data ###########
 ``` {r} 
 class <- import(here("data", "Class20032019.xlsx")) %>% 
@@ -105,18 +151,3 @@ state_info <- state_info %>%
 # FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
 df <- left_join(class_grads, state_info, by = "state") 
 ```
-
-
-```{r parquet-files}
-# first read in the data
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names()
-
-# write it out as a parquet file
-arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
-
-# read it in again
-class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
-
-```
-
