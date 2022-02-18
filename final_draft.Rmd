@@ -24,7 +24,6 @@ class <- import(here("data", "Class20032019.xlsx")) %>%
 class <- class %>% 
   rename(fips = stfips,
          state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
-
 grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
   janitor::clean_names() # graduation rates (and cohorts)
 
@@ -99,6 +98,12 @@ maps <- left_join(state_info, maps, by = "state")
 class_grads.1 <- left_join(class_grads, maps, by = "state")
 # if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
 ```
+
+```{r}
+# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
+df <- left_join(class_grads, state_info, by = "state") 
+```
+
 
 ```{r parquet-files}
 # first read in the data
