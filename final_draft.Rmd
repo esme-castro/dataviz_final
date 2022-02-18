@@ -15,6 +15,7 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(rio)
+library(maps)
 ```
 
 ```{r load-data}
@@ -50,4 +51,57 @@ fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>%
   janitor::clean_names()
 
 ```
+
+################## Below is what I have tried to do to merge all data###########
+``` {r} 
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names() # CLASS Data Set
+class <- class %>% 
+  rename(fips = stfips,
+         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
+class <- class %>% 
+  select(1:3, 6, 18, 47)
+
+grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
+  janitor::clean_names() # graduation rates (and cohorts)
+grad_rates <- grad_rates %>% 
+  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
+grad_rates <- grad_rates %>% 
+  select(1:8, 10, 12:27, 30)
+
+# join grad_rates and CLASS
+class_grads <- left_join(grad_rates, class, by = "fips") 
+  # class df w/ grad rates_state
+class_grads <- class_grads %>% 
+  rename(state = stnam) # to match map df
+class_grads <- class_grads %>% 
+  mutate(state = tolower(state)) # to match maps df
+
+# add state mapping data
+maps <- map_data("state") %>% # ggplot2::map_data
+  rename(state = region) %>% 
+  select(1:5)
+
+# state regions to maps df
+state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+
+state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
+# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
+
+state_info <- state_info %>% 
+   mutate(state_name = tolower(state_name)) %>% 
+    rename(state = state_name)
+
+maps <- left_join(state_info, maps, by = "state")
+
+#join state_data with class_grads
+# this works, but the df is so large that you cannot view the df.
+class_grads.1 <- left_join(class_grads, maps, by = "state")
+# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
+
+
+
+
+```
+
 
