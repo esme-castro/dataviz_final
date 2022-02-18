@@ -77,7 +77,15 @@ class_grads <- class_grads %>%
 class_grads <- class_grads %>% 
   mutate(state = tolower(state)) # to match maps df
 
+write_csv(x = class_grads, file = "class_grads.csv")
 # add state mapping data
+
+cla_gra_parq <- import(here("data", "class_grads.csv"))
+
+arrow::write_parquet(cla_gra_parq, here::here("data", "class_grade_parq.parquet")) 
+
+cla_gra_parq <- arrow::read_parquet(here::here("data", "class_grade_parq.parquet")) 
+
 maps <- map_data("state") %>% # ggplot2::map_data
   rename(state = region) %>% 
   select(1:5)
@@ -96,11 +104,8 @@ maps <- left_join(state_info, maps, by = "state")
 
 #join state_data with class_grads
 # this works, but the df is so large that you cannot view the df.
-class_grads.1 <- left_join(class_grads, maps, by = "state")
-# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
-
-
-
+class_grads.1 <- left_join(cla_gra_parq, maps, by = "state")
+# if this is simply too large, we may have to try and work by creating plots using two separate data frames? class_grads and state_data
 
 ```
 
