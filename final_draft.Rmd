@@ -107,6 +107,13 @@ maps <- left_join(state_info, maps, by = "state")
 class_grads.1 <- left_join(cla_gra_parq, maps, by = "state")
 # if this is simply too large, we may have to try and work by creating plots using two separate data frames? class_grads and state_data
 
+
+
+
+################################################################
+# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
+df <- left_join(class_grads, state_info, by = "state") 
+
 ```
 
 
