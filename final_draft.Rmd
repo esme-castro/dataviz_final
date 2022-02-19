@@ -15,7 +15,6 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(rio)
-library(maps)
 ```
 
 ```{r load-data}
@@ -46,12 +45,12 @@ class_grads <- left_join(grad_rates, class, by = "fips") # class df w/ grad rate
 ####### Load state_info, clean, & select columns ############################
 state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
+state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
+# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
 state_info <- state_info %>% 
    mutate(state_name = tolower(state_name)) %>% 
     rename(state = state_name)
 
-state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
-# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
 
 ###### Merge class_grads with state_info data ##################################
 data <- left_join(class_grads, state_info) # this has grad rates and state info
@@ -197,3 +196,75 @@ state_info <- state_info %>%
 # FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
 df <- left_join(class_grads, state_info, by = "state") 
 ```
+
+
+################################# ZACHS VIZ #############################################
+
+```{r}
+data.z <- data %>%
+  separate(all_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("G|L|P", lower)) %>%
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(mean_rate = mean(c(lower, upper))) %>% 
+  ungroup()
+data.z <- data.z %>% 
+  select(1:3, 25:32, 34:38)
+
+data.z1 <- data.z %>% 
+  group_by(stnam) %>% 
+  summarize(state_avg = mean(mean_rate), # Collapse mean_rate by state to get only 1 mean value of grad rate for each state
+            se = sd(mean_rate)/sqrt(n()))# get standard error of each state graduation average
+data.z1$national_avg <- data.z1 %>% 
+  summarize(national = mean(state_avg))
+
+data.z1$se_national <- data.z1 %>% 
+  summarize(se_national = sd(state_avg)/sqrt(n()))
+```
+
+```{r zviz-v1}
+data.z1 %>% 
+  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+  ggplot(aes(state_avg, stnam)) +
+  geom_linerange(aes(xmin = state_avg - 1.96 * se,
+                     xmax = state_avg + 1.96 * se),
+                 color = "grey40") +
+  geom_point() +
+  theme_minimal()# shows state overall graduation rate with SE by state. . . 
+```
+
+```{r zviz-v2}
+# FIND A WAY TO ADD THE NATIONAL AVG AND NATIONAL SD AS A NEW ROW SO IT CAN BE PLOTTED AS A REFERENCE; then use gghighlight to highlight the national average, highlight those above, highlight those below.
+```
+
+```{r zviz-final}
+#Two Options (OR DO BOTH!!!!!)
+# 1 - Add regions data (already done with z1.regions) and color based on regions
+regions_only <- data.z %>% 
+  select(4, 14, 15) %>% 
+  unique()
+z1.regions <- left_join(data.z1, regions_only, by = "stnam")
+
+z1.regions %>% 
+  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+  ggplot(aes(state_avg, stnam, color = region_name)) +
+  geom_linerange(aes(xmin = state_avg - 1.96 * se,
+                     xmax = state_avg + 1.96 * se),
+                 color = "grey40") +
+  geom_point() +
+  theme_minimal()
+
+# 2 - If I can find a way to compress class df to just one value of timehs per state (year 2011, since the grad_rate data is just 2011), I can add a shape aesthetic so that each state then has a color for region and a shape for what category of class$timehs2. Of course, we would still have the national average highlighted, would have names of states that fall below national average in once color, those that fall above in another color. 
+# Want to move the legends to the top left of inside the plot itself. 
+# add descriptive title, subtitle, legend name, x and y labs, caption for data source and notes about missing data.
+# ideally, color code the subtitle to with region names corresponding to colors in legend
+# remove the midpoint vertical lines, just leave major gridlines
+
+```
+
+__Would be cool to have a separate plot from all of this data that just shows something like college drop-out rate by state, or something to show that although some states have high high school graduation rates, they may not be indicative of content learned and/or success after high school __
+
