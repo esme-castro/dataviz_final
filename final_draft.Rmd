@@ -180,7 +180,7 @@ data_viz3 %>%
 ```
 
 ################################# ZACHS VIZ #############################################
-
+For reviewer: Run each line of code in below ode chunks
 ```{r}
 data.z <- data %>%
   separate(all_rate, c("lower", "upper"), sep = "-") %>% 
@@ -193,20 +193,22 @@ data.z <- data %>%
   rowwise() %>% 
   mutate(mean_rate = mean(c(lower, upper))) %>% 
   ungroup()
+
 data.z <- data.z %>% 
-  select(1:3, 25:32, 34:38)
+  select(2,3,25:32, 39:41)
 
 data.z1 <- data.z %>% 
   group_by(stnam) %>% 
   summarize(state_avg = mean(mean_rate), # Collapse mean_rate by state to get only 1 mean value of grad rate for each state
             se = sd(mean_rate)/sqrt(n()))# get standard error of each state graduation average
 data.z1$national_avg <- data.z1 %>% 
-  summarize(national = mean(state_avg))
+  summarize(national = mean(state_avg)) # getting national average for graduation rate
 
 data.z1$se_national <- data.z1 %>% 
-  summarize(se_national = sd(state_avg)/sqrt(n()))
+  summarize(se_national = sd(state_avg)/sqrt(n())) #getting SE of graduation rate for national average
 ```
 
+This code chunk is the foundation of this data vizualization #1
 ```{r zviz-v1}
 data.z1 %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
@@ -219,13 +221,10 @@ data.z1 %>%
 ```
 
 ```{r zviz-v2}
-# FIND A WAY TO ADD THE NATIONAL AVG AND NATIONAL SD AS A NEW ROW SO IT CAN BE PLOTTED AS A REFERENCE; then use gghighlight to highlight the national average, highlight those above, highlight those below.
-#Two Options (OR DO BOTH!!!!!)
-# 1 - Add regions data (already done with z1.regions) and color based on regions
 regions_only <- data.z %>% 
-  select(4, 14, 15) %>% 
+  select(3, 11, 12) %>% 
   unique()
-z1.regions <- left_join(data.z1, regions_only, by = "stnam")
+z1.regions <- left_join(data.z1, regions_only, by = "stnam") #adding regions to df for plotting
 
 z1.regions %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
@@ -257,17 +256,17 @@ z1.regions %>%
 ```{r zviz-final-data}
 class.z <- class %>% 
   group_by(year, state_abbr) %>% 
-  summarize(avg_timehs2 = mean(timehs2)
+  summarize(avg_timehs2 = mean(timehs2) #adding in the CLASS data. The timehs2 variable relates to State Policies regarding PE time requirements for High School
 )
 #writexl::write_xlsx(class.z, here("data", "class.z.xlsx"))
-class.z.2010 <- import(here("data", "class.z.2010.xlsx"))
+class.z.2010 <- import(here("data", "class.z.2010.xlsx")) # data to merge into regions/graduation rates data
 
-class.z.2010 <- left_join(z1.regions, class.z.2010)
+class.z.2010 <- left_join(z1.regions, class.z.2010) # joining
 ```
 
 ```{r zviz-final-plot}
 class.z.2010$avg_timehs2 = as.factor(class.z.2010$avg_timehs2)
-
+# converting variable to a factor for analysis
 class.z.2010 %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
   ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
@@ -294,7 +293,7 @@ class.z.2010 %>%
                 size = 3,
                 color = "darkslateblue",
                 angle = 270, vjust = 1.2) +
-  geom_text(aes(x = 75.5, y = 42,
+  geom_text(aes(x = 75.25, y = 42,
                 label = "Lower Limit (76.2)"),
                 size = 3,
                 color = "red",
@@ -327,16 +326,22 @@ class.z.2010 %>%
                            "5" = "Requires 225 min/wk")) +
   guides(color = guide_legend(order = 1),
          shape = guide_legend(order = 2))
+# This plot shows graduation rate by state. Region where the state falls are colored. PE policy for that state is denoted by shape.
+
 ### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
+
+# Still need to focus on title formatting and fonts (will make standardized with other visuals at the end of project, for presentation)
+
 ```
 
 
-__Would be cool to have a separate plot from all of this data that just shows something like college drop-out rate by state, or something to show that although some states have high high school graduation rates, they may not be indicative of content learned and/or success after high school __
+
 
 __MY MESS AROUND PLOTS__ 
-
+Below plots are components I am considering adding to the final plot. Have yet to figure out how to get the plot to not get congested when using the interactive functions.
 
 Simple Interactive Plot for Testing
+- This is a good, minimal example.
 ```{r}
 gg_point = ggplot(data = class.z.2010) +
   geom_point_interactive(aes(x = state_avg, stnam, 
@@ -347,8 +352,6 @@ gg_point = ggplot(data = class.z.2010) +
 z <- girafe(ggobj = gg_point)
 if(interactive() ) print(z)
 ```
-
-
 
 The following code chunk is incomplete. Ideally, this would be the final cleaned plot. Having trouble getting the interactivity to work with the aspect ratio. Would likely get rid of state labels on y-axis ... OR get rid of one of the legends and let the interactive component tell what each point corresponds to (e.g., region or HS PE time)
 
@@ -424,8 +427,14 @@ if(interactive() ) print(z.1) # How can I make this work. The animation and all 
 
 ####################### End of Zach Viz #####################
 
+############# Mandi Vizualization #####################
 
 
+
+
+
+############## End Mandi Viz ###########################
+_For those reviewing, ignore everything below this_
 <!-- ignore everything below -->
 <!-- Working on fiscal data here, ignore for now -->
 We need all years of fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finalized df.
