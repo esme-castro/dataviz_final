@@ -17,6 +17,8 @@ library(here)
 library(rio)
 library(ggtext)
 library(ggiraph)
+library(scales)
+library(gghighlight)
 ```
 
 ```{r load-data}
@@ -59,146 +61,123 @@ data <- left_join(class_grads, state_info) # this has grad rates and state info
 ```
 
 ```{r fiscal-data}
-fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+## commenting out fiscal data other than 2011 for now ###################
+## trying out visual with just one then will work to merge later ########
+
+#fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
+#  janitor::clean_names() %>% 
+#  select(leaid, fipst, stabbr, totalrev, tfedrev,
+#         tstrev, tlocrev, tcurinst, tcurssvc)
 
 fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
   janitor::clean_names() %>% 
   select(leaid, fipst, stabbr, totalrev, tfedrev,
          tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal12 <- get_data("NCES_CCD_fiscal_district_2012") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal12 <- get_data("NCES_CCD_fiscal_district_2012") %>% 
+ # janitor::clean_names() %>% 
+#  select(leaid, fipst, stabbr, totalrev, tfedrev,
+ #        tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal13 <- get_data("NCES_CCD_fiscal_district_2013") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal13 <- get_data("NCES_CCD_fiscal_district_2013") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal14 <- get_data("NCES_CCD_fiscal_district_2014") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal14 <- get_data("NCES_CCD_fiscal_district_2014") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal15 <- get_data("NCES_CCD_fiscal_district_2015") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal15 <- get_data("NCES_CCD_fiscal_district_2015") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal16 <- get_data("NCES_CCD_fiscal_district_2016") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal16 <- get_data("NCES_CCD_fiscal_district_2016") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal17 <- get_data("NCES_CCD_fiscal_district_2017") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
+#fiscal17 <- get_data("NCES_CCD_fiscal_district_2017") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
-fiscal18 <- get_data("NCES_CCD_fiscal_district_2018") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
-```
-
+#fiscal18 <- get_data("NCES_CCD_fiscal_district_2018") %>% 
+ # janitor::clean_names() %>% 
+  #select(leaid, fipst, stabbr, totalrev, tfedrev,
+   #      tstrev, tlocrev, tcurinst, tcurssvc)
 
 
+# Merge data (state_info, grads, and fiscal11)
+state_grads <- left_join(state_info, grad_rates)
 
-
-
-
-
-<!-- Working on fiscal data here -->
-Did Daniel show you a way to get around these large file sizes? We need all years of that fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finaized df.
-```{r fiscal-data}
-fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
-  janitor::clean_names() # Esme, this is JUST 2010 fiscal data. It is a huge data set... We still need to import and merge all of these together and then to other dataset... Didn't Dr. Anderson show you how to get around this??
-
-## Zach, I see what you mean, I will email Anderson and ask if he recommends
-## making it into parquet files before merging or not. Also if we need to
-## expand our R memory when using the data.
-
-fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
-  janitor::clean_names()
-
-fiscal_df <- get_fiscal_data()
-
-arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
-
-
-## using code below as reference for fiscal data, do not remove yet #####
-# first read in the data
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names()
-
-# write it out as a parquet file
-arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
-
-# read it in again
-class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
-```
-
-
-<!-- ignore below code chunk, this was trying to get geo data, use first code chunk above instead of final project data -->
-################## Below is what I have tried to do to merge all data ###########
-``` {r} 
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names() # CLASS Data Set
-class <- class %>% 
-  rename(fips = stfips,
-         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
-class <- class %>% 
-  select(1:3, 6, 18, 47)
-
-grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
-  janitor::clean_names() # graduation rates (and cohorts)
-grad_rates <- grad_rates %>% 
+# Merge state_grads with fiscal11
+fiscal11 <- fiscal11 %>% 
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
-grad_rates <- grad_rates %>% 
-  select(1:8, 10, 12:27, 30)
 
-# join grad_rates and CLASS
-class_grads <- left_join(grad_rates, class, by = "fips") 
-  # class df w/ grad rates_state
-class_grads <- class_grads %>% 
-  rename(state = stnam) # to match map df
-class_grads <- class_grads %>% 
-  mutate(state = tolower(state)) # to match maps df
-
-# add state mapping data UNNEEdED IF WE CANNOT FIGURE THIS OUT
-# maps <- map_data("state") %>% # ggplot2::map_data
-  #select(1:5)
-
-# state regions to maps df
-state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
-
-state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
-# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
-
-state_info <- state_info %>% 
-   mutate(state_name = tolower(state_name)) %>% 
-    rename(state = state_name)
-
-# maps <- left_join(state_info, maps, by = "state") # DO NOT NEED THIS IF WE CANNOT FIGURE OUT DF SIZE PROBLEM
-
-#join state_data with class_grads
-# this works, but the df is so large that you cannot view the df.
-
-#class_grads.1 <- left_join(class_grads, maps, by = "state") 
-
-# DO NOT NEED THIS IF WE CANNOT FIGURE OUT GEO DATA FRAME SIZE ISSUE
-# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
+data_viz3 <- left_join(state_grads, fiscal11)
 ```
 
-```{r}
-# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
-df <- left_join(class_grads, state_info, by = "state") 
+**Visual for class draft assignment**
+```{r viz-3-esme}
+data_viz3 <- data_viz3 %>% 
+  tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("G|L|P", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(mean = mean(c(lower, upper))) %>% 
+  ungroup()
+
+data_viz3 <- data_viz3 %>% 
+  group_by(state, region_name) %>% 
+  mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
+
+ggplot(data_viz3, aes(support_mean, mean)) +
+  geom_point(color = "seagreen4") +
+  gghighlight(stabbr == "OR") +
+  scale_x_log10("Total Revenue for Support Services",
+                labels = scales::dollar) +
+  labs(y = "Averaege Graduation Rates",
+       title = "Graduation Rates of Economically Disadvantaged Students",
+       subtitle = "by Revenue for Support Services in Oregon",
+       caption = "Data collected from 2011") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
 ```
 
+
+<!-- trying something, Mandi this is the code I (Esme) showed you-->
+```{r viz-code-for-part-of-Q1}
+data_viz3 %>% 
+  group_by(state_name, region_name) %>% 
+  mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
+  ggplot(aes(mean, state_name)) +
+  geom_point(color = "seagreen4") +
+  labs(y = "Averaege Graduation Rates",
+       title = "Graduation Rates of Economically Disadvantaged Students",
+       subtitle = "by state",
+       caption = "Data collected from 2011") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+```
 
 ################################# ZACHS VIZ #############################################
 
@@ -444,3 +423,83 @@ if(interactive() ) print(z.1) # How can I make this work. The animation and all 
 
 
 ####################### End of Zach Viz #####################
+
+
+
+<!-- ignore everything below -->
+<!-- Working on fiscal data here, ignore for now -->
+We need all years of fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finalized df.
+```{r fiscal-data}
+fiscal_df <- get_fiscal_data()
+
+arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
+## below did not seem to work
+
+## using code below as reference for fiscal data, do not remove yet #####
+# first read in the data
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names()
+
+# write it out as a parquet file
+arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
+
+# read it in again
+class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
+```
+
+
+<!-- ignore below code chunks, this was trying to get geo data, use first code chunk above instead of final project data -->
+################## Below is what I (Zach) have tried to do to merge all data ###########
+``` {r} 
+class <- import(here("data", "Class20032019.xlsx")) %>% 
+  janitor::clean_names() # CLASS Data Set
+class <- class %>% 
+  rename(fips = stfips,
+         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
+class <- class %>% 
+  select(1:3, 6, 18, 47)
+
+grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
+  janitor::clean_names() # graduation rates (and cohorts)
+grad_rates <- grad_rates %>% 
+  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
+grad_rates <- grad_rates %>% 
+  select(1:8, 10, 12:27, 30)
+
+# join grad_rates and CLASS
+class_grads <- left_join(grad_rates, class, by = "fips") 
+  # class df w/ grad rates_state
+class_grads <- class_grads %>% 
+  rename(state = stnam) # to match map df
+class_grads <- class_grads %>% 
+  mutate(state = tolower(state)) # to match maps df
+
+# add state mapping data UNNEEdED IF WE CANNOT FIGURE THIS OUT
+# maps <- map_data("state") %>% # ggplot2::map_data
+  #select(1:5)
+
+# state regions to maps df
+state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+
+state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
+# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
+
+state_info <- state_info %>% 
+   mutate(state_name = tolower(state_name)) %>% 
+    rename(state = state_name)
+
+# maps <- left_join(state_info, maps, by = "state") # DO NOT NEED THIS IF WE CANNOT FIGURE OUT DF SIZE PROBLEM
+
+#join state_data with class_grads
+# this works, but the df is so large that you cannot view the df.
+
+#class_grads.1 <- left_join(class_grads, maps, by = "state") 
+
+# DO NOT NEED THIS IF WE CANNOT FIGURE OUT GEO DATA FRAME SIZE ISSUE
+# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
+```
+
+```{r}
+# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
+df <- left_join(class_grads, state_info, by = "state") 
+```
