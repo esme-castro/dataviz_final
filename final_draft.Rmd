@@ -162,9 +162,9 @@ ggplot(data_viz3, aes(support_mean, mean)) +
 <!-- trying something, Mandi this is the code I (Esme) showed you-->
 ```{r viz-code-for-part-of-Q1}
 data_viz3 %>% 
-  group_by(state_name, region_name) %>% 
+  group_by(state, region_name) %>% 
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
-  ggplot(aes(mean, state_name)) +
+  ggplot(aes(mean, state)) +
   geom_point(color = "seagreen4") +
   labs(y = "Averaege Graduation Rates",
        title = "Graduation Rates of Economically Disadvantaged Students",
