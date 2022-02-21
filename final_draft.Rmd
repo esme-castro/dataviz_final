@@ -194,8 +194,10 @@ data.z <- data %>%
   mutate(mean_rate = mean(c(lower, upper))) %>% 
   ungroup()
 
+#data.z <- data.z %>% 
+  #select(2,3,25:32, 39:41)
 data.z <- data.z %>% 
-  select(2,3,25:32, 39:41)
+  select(1:3, 25:32, 34:38)
 
 data.z1 <- data.z %>% 
   group_by(stnam) %>% 
@@ -221,8 +223,11 @@ data.z1 %>%
 ```
 
 ```{r zviz-v2}
+#regions_only <- data.z %>% 
+  #select(3, 11, 12)
+  #unique()
 regions_only <- data.z %>% 
-  select(3, 11, 12) %>% 
+  select(4, 14, 15) %>% 
   unique()
 z1.regions <- left_join(data.z1, regions_only, by = "stnam") #adding regions to df for plotting
 
