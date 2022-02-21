@@ -15,6 +15,7 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(rio)
+library(ggtext)
 ```
 
 ```{r load-data}
@@ -239,9 +240,6 @@ data.z1 %>%
 
 ```{r zviz-v2}
 # FIND A WAY TO ADD THE NATIONAL AVG AND NATIONAL SD AS A NEW ROW SO IT CAN BE PLOTTED AS A REFERENCE; then use gghighlight to highlight the national average, highlight those above, highlight those below.
-```
-
-```{r zviz-final}
 #Two Options (OR DO BOTH!!!!!)
 # 1 - Add regions data (already done with z1.regions) and color based on regions
 regions_only <- data.z %>% 
@@ -256,7 +254,17 @@ z1.regions %>%
                      xmax = state_avg + 1.96 * se),
                  color = "grey40") +
   geom_point() +
-  theme_minimal()
+   geom_vline(xintercept = 78.17352,
+             color = "darkslateblue",
+             linetype = "solid",
+             size = 0.8) +
+  theme_minimal() +
+  labs(x = "Graduation Rate (%) - 2011",
+       y = "",
+       title = "State Graduation Rates",
+       subtitle = "By Region",
+       caption = "Vertical blue line indicates the graduation rate of the United States",
+       color = "Region") 
 
 # 2 - If I can find a way to compress class df to just one value of timehs per state (year 2011, since the grad_rate data is just 2011), I can add a shape aesthetic so that each state then has a color for region and a shape for what category of class$timehs2. Of course, we would still have the national average highlighted, would have names of states that fall below national average in once color, those that fall above in another color. 
 # Want to move the legends to the top left of inside the plot itself. 
@@ -266,5 +274,230 @@ z1.regions %>%
 
 ```
 
+```{r zviz-final-data}
+class.z <- class %>% 
+  group_by(year, state_abbr) %>% 
+  summarize(avg_timehs2 = mean(timehs2)
+)
+class.z.2010 <- import(here("data", "class.z.2010.xlsx"))
+
+class.z.2010 <- left_join(z1.regions, class.z.2010)
+```
+
+```{r zviz-final-plot}
+class.z.2010$avg_timehs2 = as.factor(class.z.2010$avg_timehs2)
+
+class.z.2010 %>% 
+  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+  ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
+  geom_linerange(aes(xmin = state_avg - 1.96 * se,
+                     xmax = state_avg + 1.96 * se),
+                 color = "grey40") +
+  geom_point(size = 3) +
+  theme_minimal() +
+  geom_vline(xintercept = 78.17352,
+             color = "darkslateblue",
+             linetype = "solid",
+             size = 0.8) +
+  geom_vline(xintercept = 76.14586,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  geom_vline(xintercept = 80.17532,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  coord_cartesian(xlim = c(60, 90)) +
+  geom_text(aes(x = 79, y = 42,
+                label = "National Average (78.2)"),
+                size = 3,
+                color = "darkslateblue",
+                angle = 270, vjust = 1.2) +
+  geom_text(aes(x = 75.5, y = 42,
+                label = "Lower Limit (76.2)"),
+                size = 3,
+                color = "red",
+                angle = 90, vjust = 1.2) +
+  geom_text(aes(x = 81, y = 42,
+                label = "Upper Limit (80.2)"),
+                size = 3,
+                color = "red",
+                angle = 270, vjust = 1.2) + 
+  theme(panel.grid.major.y = element_blank(), 
+        panel.grid.major.x = element_line(color = "gray85"), 
+        axis.title.x = element_text(face = "bold", size = 12),
+        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
+        plot.subtitle = element_text(hjust = -.16), 
+        plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
+        legend.title = element_text(size = 10, face = "bold")) +
+  labs(x = "Graduation Rate (%) - 2011",
+       y = "",
+       title = "State Graduation Rates",
+       subtitle = "By Region and High School Physical Education Policy",
+       caption = "DATA NOTE, INSERT NOTE THAT SOME STATES 
+       WERE OMITTED DUE TO MISSING DATA (LIST THOSE STATES",
+       color = "Region",
+       shape = "HS PE Policy") +
+  scale_shape_discrete(labels = 
+                         c("0" = "No Requirement or Recommendation",
+                           "2" = "90 min/wk Minimum",
+                           "3" = "90 - 150 min/wk",
+                           "4" = "150 - 225 min/wk",
+                           "5" = "Requires 225 min/wk")) +
+  guides(color = guide_legend(order = 1),
+         shape = guide_legend(order = 2))
+### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
+```
+
+
 __Would be cool to have a separate plot from all of this data that just shows something like college drop-out rate by state, or something to show that although some states have high high school graduation rates, they may not be indicative of content learned and/or success after high school __
+
+__MY MESS AROUND PLOTS__ using (ggiraph)
+```{r}
+class.z.2010 %>% 
+  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+  ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
+  geom_linerange(aes(xmin = state_avg - 1.96 * se,
+                     xmax = state_avg + 1.96 * se),
+                 color = "grey40") +
+  geom_point(size = 3) +
+  theme_minimal() +
+  geom_vline(xintercept = 78.17352,
+             color = "darkslateblue",
+             linetype = "solid",
+             size = 0.8) +
+  geom_vline(xintercept = 76.14586,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  geom_vline(xintercept = 80.17532,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  coord_cartesian(xlim = c(60, 90)) +
+  geom_text(aes(x = 79, y = 42,
+                label = "National Average (78.2)"),
+                size = 3,
+                color = "darkslateblue",
+                angle = 270, vjust = 1.2) +
+  geom_text(aes(x = 75.5, y = 42,
+                label = "Lower Limit (76.2)"),
+                size = 3,
+                color = "red",
+                angle = 90, vjust = 1.2) +
+  geom_text(aes(x = 81, y = 42,
+                label = "Upper Limit (80.2)"),
+                size = 3,
+                color = "red",
+                angle = 270, vjust = 1.2) + 
+  theme(panel.grid.major.y = element_blank(), 
+        panel.grid.major.x = element_line(color = "gray85"), 
+        axis.title.x = element_text(face = "bold", size = 12),
+        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
+        plot.subtitle = element_text(hjust = -.16), 
+        plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
+        legend.title = element_text(size = 10, face = "bold")) +
+  labs(x = "Graduation Rate (%) - 2011",
+       y = "",
+       title = "State Graduation Rates",
+       subtitle = "By Region and High School Physical Education Policy",
+       caption = "DATA NOTE, INSERT NOTE THAT SOME STATES 
+       WERE OMITTED DUE TO MISSING DATA (LIST THOSE STATES",
+       color = "Region",
+       shape = "HS PE Policy") +
+  scale_shape_discrete(labels = 
+                         c("0" = "No Requirement or Recommendation",
+                           "2" = "90 min/wk Minimum",
+                           "3" = "90 - 150 min/wk",
+                           "4" = "150 - 225 min/wk",
+                           "5" = "Requires 225 min/wk")) +
+  guides(color = guide_legend(order = 1),
+         shape = guide_legend(order = 2))
+### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
+```
+
+
+Simple Interactive Plot for Testing
+```{r}
+gg_point = ggplot(data = class.z.2010) +
+  geom_point_interactive(aes(x = state_avg, stnam, 
+                             color = region_name,
+                             shape = avg_timehs2,
+                             tooltip = stnam, data_id = stnam))
+
+z <- girafe(ggobj = gg_point)
+if(interactive() ) print(z)
+```
+
+
+
+The following code chunk is incomplete. Ideally, this would be the final cleaned plot. Having trouble getting the interactivity to work with the aspect ratio. Would likely get rid of state labels on y-axis ... OR get rid of one of the legends and let the interactive component tell what each point corresponds to (e.g., region or HS PE time)
+```{r, fig.dem = c(8, 6)}
+gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
+  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+  ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
+  geom_linerange(aes(xmin = state_avg - 1.96 * se,
+                     xmax = state_avg + 1.96 * se),
+                 color = "grey40") +
+  geom_point_interactive(aes(x = state_avg, stnam, 
+                             color = region_name,
+                             shape = avg_timehs2,
+                             tooltip = stnam, data_id = stnam)) +
+  theme_minimal() +
+  geom_vline(xintercept = 78.17352,
+             color = "darkslateblue",
+             linetype = "solid",
+             size = 0.8) +
+  geom_vline(xintercept = 76.14586,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  geom_vline(xintercept = 80.17532,
+             color = "red",
+             linetype = "dashed",
+             size = 0.5) +
+  coord_cartesian(xlim = c(60, 90)) +
+  geom_text(aes(x = 79, y = 42,
+                label = "National Average (78.2)"),
+                size = 3,
+                color = "darkslateblue",
+                angle = 270, vjust = 1.2) +
+  geom_text(aes(x = 75.5, y = 42,
+                label = "Lower Limit (76.2)"),
+                size = 3,
+                color = "red",
+                angle = 90, vjust = 1.2) +
+  geom_text(aes(x = 81, y = 42,
+                label = "Upper Limit (80.2)"),
+                size = 3,
+                color = "red",
+                angle = 270, vjust = 1.2) + 
+  theme(panel.grid.major.y = element_blank(), 
+        panel.grid.major.x = element_line(color = "gray85"), 
+        axis.title.x = element_text(face = "bold", size = 12),
+        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
+        plot.subtitle = element_text(hjust = -.16), 
+        plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
+        legend.title = element_text(size = 10, face = "bold")) +
+  labs(x = "Graduation Rate (%) - 2011",
+       y = "",
+       title = "State Graduation Rates",
+       subtitle = "By Region and High School Physical Education Policy",
+       caption = "DATA NOTE, INSERT NOTE THAT SOME STATES 
+       WERE OMITTED DUE TO MISSING DATA (LIST THOSE STATES",
+       color = "Region",
+       shape = "HS PE Policy") +
+  scale_shape_discrete(labels = 
+                         c("0" = "No Requirement or Recommendation",
+                           "2" = "90 min/wk Minimum",
+                           "3" = "90 - 150 min/wk",
+                           "4" = "150 - 225 min/wk",
+                           "5" = "Requires 225 min/wk")) +
+  guides(color = guide_legend(order = 1),
+         shape = guide_legend(order = 2))
+
+z.1 <- girafe(ggobj = gg_point1)
+if(interactive() ) print(z.1) # How can I make this work. The animation and all components are included, but the plot is smashed together and crowded. 
+```
+
 
