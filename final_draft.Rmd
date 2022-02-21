@@ -17,6 +17,7 @@ library(here)
 library(rio)
 library(maps)
 library(scales)
+library(gghighlight)
 ```
 
 ```{r load-data}
@@ -60,6 +61,8 @@ data <- left_join(class_grads, state_info) # this has grad rates and state info
 
 ```{r fiscal-data}
 ## commenting out fiscal data other than 2011 for now ###################
+## trying out visual with just one then will work to merge later ########
+
 #fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
 #  janitor::clean_names() %>% 
 #  select(leaid, fipst, stabbr, totalrev, tfedrev,
@@ -129,15 +132,43 @@ data_viz3 <- data_viz3 %>%
   mutate(mean = mean(c(lower, upper))) %>% 
   ungroup()
 
+data_viz3 <- data_viz3 %>% 
+  group_by(state_name, region_name) %>% 
+  mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
+
+ggplot(data_viz3, aes(support_mean, mean)) +
+  geom_point(color = "seagreen4") +
+  gghighlight(stabbr == "OR") +
+  scale_x_log10("Total Revenue for Support Services",
+                labels = scales::dollar) +
+  labs(y = "Averaege Graduation Rates",
+       title = "Graduation Rates of Economically Disadvantaged Students",
+       subtitle = "by Revenue for Support Services in Oregon",
+       caption = "Data collected from 2011") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
+```
+
+
+
+
+<!-- trying something, this is what it was Mandi-->
+```{r viz-code-for-Mandi}
 data_viz3 %>% 
   group_by(state_name, region_name) %>% 
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
-  ggplot(aes(support_mean, mean)) +
+  ggplot(aes(mean, state_name)) +
   geom_point(color = "seagreen4") +
-  scale_x_log10("Total Revenue for Support Services", labels = scales::dollar)+
   labs(y = "Averaege Graduation Rates",
        title = "Graduation Rates of Economically Disadvantaged Students",
-       subtitle = "by Revenue for Support Services",
+       subtitle = "by state",
        caption = "Data collected from 2011") +
   theme_minimal() +
   theme(axis.text.x = element_text(face = "bold"),
@@ -154,23 +185,14 @@ data_viz3 %>%
 
 
 
-<!-- Working on fiscal data here -->
-Did Daniel show you a way to get around these large file sizes? We need all years of that fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finaized df.
+
+<!-- Working on fiscal data here, ignore for now -->
+We need all years of fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finalized df.
 ```{r fiscal-data}
-fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
-  janitor::clean_names() # Esme, this is JUST 2010 fiscal data. It is a huge data set... We still need to import and merge all of these together and then to other dataset... Didn't Dr. Anderson show you how to get around this??
-
-## Zach, I see what you mean, I will email Anderson and ask if he recommends
-## making it into parquet files before merging or not. Also if we need to
-## expand our R memory when using the data.
-
-fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
-  janitor::clean_names()
-
 fiscal_df <- get_fiscal_data()
 
 arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
-
+## below did not seem to work
 
 ## using code below as reference for fiscal data, do not remove yet #####
 # first read in the data
