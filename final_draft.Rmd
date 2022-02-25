@@ -46,6 +46,7 @@ grad_rates <- grad_rates %>%
 ####### Merge CLASS with grad_rates df ######################################
 class_grads <- left_join(grad_rates, class, by = "fips") # class df w/ grad rates&state
 
+
 ####### Load state_info, clean, & select columns ############################
 state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
@@ -138,9 +139,11 @@ data_viz3 <- data_viz3 %>%
   group_by(state, region_name) %>% 
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
 
-ggplot(data_viz3, aes(support_mean, mean)) +
-  geom_point(color = "seagreen4") +
-  gghighlight(stabbr == "OR") +
+ggplot(data_viz3, aes(support_mean, mean), color = stabbr) +
+  geom_point(aes(color = stabbr)) +
+  gghighlight(stabbr %in% c("OR", "MT", "HI"),
+              unhighlighted_params = list(size = 1),
+              label_key = stabbr) +
   scale_x_log10("Total Revenue for Support Services",
                 labels = scales::dollar) +
   labs(y = "Averaege Graduation Rates",
@@ -156,6 +159,10 @@ ggplot(data_viz3, aes(support_mean, mean)) +
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 
 ### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
+
+#RG I like the heatmap idea a lot but this graph is informative as well. It would be interesting to see what Oregon compares to in this graph (so maybe highlight the highest and lowest total revenue states)
+
+
 ```
 
 
@@ -166,7 +173,8 @@ data_viz3 %>%
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
   ggplot(aes(mean, state)) +
   geom_point(color = "seagreen4") +
-  labs(y = "Averaege Graduation Rates",
+  labs(x = "Mean %",
+       y = "Averaege Graduation Rates",
        title = "Graduation Rates of Economically Disadvantaged Students",
        subtitle = "by state",
        caption = "Data collected from 2011") +
@@ -177,6 +185,8 @@ data_viz3 %>%
         axis.title.y = element_text(size = 14, face = "bold"),
         plot.title = element_text(size = 16, face = "bold"),
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+#RG is this mean percentage of graduation rates? 
 ```
 
 ################################# ZACHS VIZ #############################################
@@ -337,6 +347,8 @@ class.z.2010 %>%
 
 # Still need to focus on title formatting and fonts (will make standardized with other visuals at the end of project, for presentation)
 
+#RG you can remove 225 min policy since there are none that fit
+
 ```
 
 
@@ -427,6 +439,8 @@ gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
 
 z.1 <- girafe(ggobj = gg_point1)
 if(interactive() ) print(z.1) # How can I make this work. The animation and all components are included, but the plot is smashed together and crowded. 
+
+#RG these wouldn't run for me error: Error in print(z.1) : object 'z.1' not found
 ```
 
 
