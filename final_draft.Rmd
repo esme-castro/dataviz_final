@@ -156,6 +156,10 @@ ggplot(data_viz3, aes(support_mean, mean)) +
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 
 ### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
+
+# Great use of highlighting! My takeaway here is that Oregon is pretty average (slightly below?) in terms of revenue for support services, and for grad rates of economically disadvantaged students
+# It might be helpful to include an additional way of conveying the density of the other states (one idea would be to take an average of all states and include that in another highlighted band)
+# Additionally, it could be helpful to remove the outlier at $1B - that way the rest of the points will be more central/zoomed in on to see the differences between them
 ```
 
 
@@ -177,6 +181,30 @@ data_viz3 %>%
         axis.title.y = element_text(size = 14, face = "bold"),
         plot.title = element_text(size = 16, face = "bold"),
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+
+## See below for an alternative way of visualizing this data. I think these plots all have their strengths, so it kinda depends on what you're hoping to convey with the visualization. The plot in the prior code chunk seems to suggest Oregon is pretty normal relative to other states. The previous plot shows the much wider spread of some states than others. And I think my plot shows the differences in densities for each states
+
+library(ggridges)
+data_viz3 %>% 
+  group_by(state, region_name) %>% 
+  mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
+  ggplot(aes(mean, state)) +
+  geom_density_ridges(color = "seagreen4") +
+  labs(y = "Averaege Graduation Rates",
+       title = "Graduation Rates of Economically Disadvantaged Students",
+       subtitle = "by state",
+       caption = "Data collected from 2011") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+
+
 ```
 
 ################################# ZACHS VIZ #############################################
@@ -249,6 +277,8 @@ z1.regions %>%
        subtitle = "By Region",
        caption = "Vertical blue line indicates the graduation rate of the United States",
        color = "Region") 
+
+## The vertical line really helps me get oriented with where each state stands relative to the mean, I'd definitely keep this in the final visualization
 
 # 2 - If I can find a way to compress class df to just one value of timehs per state (year 2011, since the grad_rate data is just 2011), I can add a shape aesthetic so that each state then has a color for region and a shape for what category of class$timehs2. Of course, we would still have the national average highlighted, would have names of states that fall below national average in once color, those that fall above in another color. 
 # Want to move the legends to the top left of inside the plot itself. 
@@ -336,6 +366,13 @@ class.z.2010 %>%
 ### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
 
 # Still need to focus on title formatting and fonts (will make standardized with other visuals at the end of project, for presentation)
+
+
+
+##This is a very informationally dense plot! I'd be curious if there's a takeaway you're hoping people to have. Because there's so much info, it might be helpful to include some guidance. As someone new to this plot, it's taken me a moment to get my bearings so let me see if my summary of these findings line up with what you want me to see:
+# - the midwest and northeast have higher grad rates than the south and west
+# - the most common PE policy is 90in/wk minimum, but PE policy doesn't seem to impact grad rates
+# Are those the takeaways you want me to have? If there are others, it could be helpful to use the title to guide me to aspects of the plot I should be focusing on
 
 ```
 
@@ -427,6 +464,8 @@ gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
 
 z.1 <- girafe(ggobj = gg_point1)
 if(interactive() ) print(z.1) # How can I make this work. The animation and all components are included, but the plot is smashed together and crowded. 
+
+### I wonder what this plot will look like knitted? Maybe it won't be as much of an issue as in the viewer. Unfortunately, I'm getting knitting errors so can't check for you, but that often helps me gauge how things should be formatted
 ```
 
 
