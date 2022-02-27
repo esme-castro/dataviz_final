@@ -113,11 +113,16 @@ fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>%
 # Merge data (state_info, grads, and fiscal11)
 state_grads <- left_join(state_info, grad_rates)
 
+#MV PEER REVIEW: Had to add this so that the merge worked for me
+state_grads <- state_grads %>%
+  mutate(fipst = as.numeric(fipst))
+  
+
 # Merge state_grads with fiscal11
 fiscal11 <- fiscal11 %>% 
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
-data_viz3 <- left_join(state_grads, fiscal11)
+data_viz3 <- left_join(state_grads, fiscal11, by = "fipst")
 ```
 
 **Visual for class draft assignment**
@@ -272,6 +277,8 @@ class.z.2010 <- left_join(z1.regions, class.z.2010) # joining
 ```{r zviz-final-plot}
 class.z.2010$avg_timehs2 = as.factor(class.z.2010$avg_timehs2)
 # converting variable to a factor for analysis
+#MV PEER REVIEW: It feels like that there are a lot of different groups being plotted that it is hard
+# to figure out the main takeaway. Consider removing the region
 class.z.2010 %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
   ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
@@ -331,6 +338,7 @@ class.z.2010 %>%
                            "5" = "Requires 225 min/wk")) +
   guides(color = guide_legend(order = 1),
          shape = guide_legend(order = 2))
+
 # This plot shows graduation rate by state. Region where the state falls are colored. PE policy for that state is denoted by shape.
 
 ### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
