@@ -155,6 +155,9 @@ ggplot(data_viz3, aes(support_mean, mean)) +
         plot.title = element_text(size = 16, face = "bold"),
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 
+# Very beautiful plot! I love the simplicity of this plot and the OR highlight is very eye-pleasing! 
+#Does the dots within state represents school district? Some suggestions: 1. Maybe try get the average graduation rate for each state instead and 2. Divide the revenue by total number of students. This way we can compare each state more objectively. 
+
 ### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
 ```
 
@@ -177,6 +180,9 @@ data_viz3 %>%
         axis.title.y = element_text(size = 14, face = "bold"),
         plot.title = element_text(size = 16, face = "bold"),
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
+
+# Same comment here, does each data point represent district? perhaps calculate the average per state and plot it. 
+#maybe label on y-axis can be moved to x-axis ? 
 ```
 
 ################################# ZACHS VIZ #############################################
@@ -219,7 +225,9 @@ data.z1 %>%
                      xmax = state_avg + 1.96 * se),
                  color = "grey40") +
   geom_point() +
-  theme_minimal()# shows state overall graduation rate with SE by state. . . 
+  theme_minimal()# shows state overall graduation rate with SE by state. . .
+
+
 ```
 
 ```{r zviz-v2}
@@ -241,14 +249,20 @@ z1.regions %>%
    geom_vline(xintercept = 78.17352,
              color = "darkslateblue",
              linetype = "solid",
-             size = 0.8) +
-  theme_minimal() +
+             size = 0.8) + 
+    theme_minimal() +
   labs(x = "Graduation Rate (%) - 2011",
        y = "",
        title = "State Graduation Rates",
        subtitle = "By Region",
        caption = "Vertical blue line indicates the graduation rate of the United States",
-       color = "Region") 
+       color = "Region") +
+ theme(plot.title.position = "plot",  #left aligned title and subtitle
+   plot.title = element_text(family = 'Helvetica', 
+                              color = '#666666', 
+                              face = 'bold', 
+                              size = 18, 
+                             )) 
 
 # 2 - If I can find a way to compress class df to just one value of timehs per state (year 2011, since the grad_rate data is just 2011), I can add a shape aesthetic so that each state then has a color for region and a shape for what category of class$timehs2. Of course, we would still have the national average highlighted, would have names of states that fall below national average in once color, those that fall above in another color. 
 # Want to move the legends to the top left of inside the plot itself. 
@@ -311,10 +325,14 @@ class.z.2010 %>%
   theme(panel.grid.major.y = element_blank(), 
         panel.grid.major.x = element_line(color = "gray85"), 
         axis.title.x = element_text(face = "bold", size = 12),
-        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
-        plot.subtitle = element_text(hjust = -.16), 
         plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
-        legend.title = element_text(size = 10, face = "bold")) +
+        legend.title = element_text(size = 10, face = "bold"),
+        plot.title.position = "plot",  #left aligned title and subtitle
+        plot.title = element_text(family = 'Helvetica', 
+                              color = '#666666', 
+                              face = 'bold', 
+                              size = 18, 
+                             )) + 
   labs(x = "Graduation Rate (%) - 2011",
        y = "",
        title = "State Graduation Rates",
@@ -361,7 +379,7 @@ if(interactive() ) print(z)
 The following code chunk is incomplete. Ideally, this would be the final cleaned plot. Having trouble getting the interactivity to work with the aspect ratio. Would likely get rid of state labels on y-axis ... OR get rid of one of the legends and let the interactive component tell what each point corresponds to (e.g., region or HS PE time)
 
 Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
-```{r}
+```{r fig.height=8, fig.width=10}
 gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
   ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
@@ -404,10 +422,16 @@ gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
   theme(panel.grid.major.y = element_blank(), 
         panel.grid.major.x = element_line(color = "gray85"), 
         axis.title.x = element_text(face = "bold", size = 12),
-        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
-        plot.subtitle = element_text(hjust = -.16), 
+        plot.title.position = "plot",  #left aligned title and subtitle
+        plot.title = element_text(family = 'Helvetica', 
+                              color = '#666666', 
+                              face = 'bold', 
+                              size = 15, 
+                             ),
         plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
-        legend.title = element_text(size = 10, face = "bold")) +
+        legend.position='bottom',  #moving legend to bottom but needs more wrangling for spacing
+        legend.direction='horizontal',
+        legend.margin=margin(t=0, r=0, b=-0.5, l=0, unit="cm")) +
   labs(x = "Graduation Rate (%) - 2011",
        y = "",
        title = "State Graduation Rates",
