@@ -283,7 +283,7 @@ class.z.2010 <- import(here("data", "class.z.2010.xlsx")) # data to merge into r
 class.z.2010 <- left_join(z1.regions, class.z.2010) # joining
 ```
 
-```{r zviz-final-plot}
+```{r zviz-final-plot, fig.height=8, fig.width=8}
 class.z.2010$avg_timehs2 = as.factor(class.z.2010$avg_timehs2)
 # converting variable to a factor for analysis
 class.z.2010 %>% 
@@ -332,7 +332,10 @@ class.z.2010 %>%
                               color = '#666666', 
                               face = 'bold', 
                               size = 18, 
-                             )) + 
+                             ),
+        legend.position='bottom',  #moving legend to bottom but needs more wrangling for spacing
+        legend.direction='horizontal',
+        legend.margin=margin(t=0, r=0, b=-0.5, l=0, unit="cm")) + 
   labs(x = "Graduation Rate (%) - 2011",
        y = "",
        title = "State Graduation Rates",
