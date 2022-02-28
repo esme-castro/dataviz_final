@@ -3,6 +3,8 @@ title: "Final_Draft"
 author: "Esme, Zach, & Mandi"
 date: "2/21/2022"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -122,6 +124,7 @@ data_viz3 <- left_join(state_grads, fiscal11)
 
 **Visual for class draft assignment**
 ```{r viz-3-esme}
+  
 data_viz3 <- data_viz3 %>% 
   tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
   filter(!grepl("G|L|P", lower)) %>% 
@@ -143,7 +146,7 @@ ggplot(data_viz3, aes(support_mean, mean)) +
   gghighlight(stabbr == "OR") +
   scale_x_log10("Total Revenue for Support Services",
                 labels = scales::dollar) +
-  labs(y = "Averaege Graduation Rates",
+  labs(y = "Average Graduation Rates",
        title = "Graduation Rates of Economically Disadvantaged Students",
        subtitle = "by Revenue for Support Services in Oregon",
        caption = "Data collected from 2011") +
@@ -180,7 +183,7 @@ data_viz3 %>%
 ```
 
 ################################# ZACHS VIZ #############################################
-For reviewer: Run each line of code in below ode chunks
+For reviewer: Run each line of code in below code chunks
 ```{r}
 data.z <- data %>%
   separate(all_rate, c("lower", "upper"), sep = "-") %>% 
@@ -517,3 +520,47 @@ state_info <- state_info %>%
 # FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
 df <- left_join(class_grads, state_info, by = "state") 
 ```
+
+
+
+### reviewer comments (Diana):
+
+--
+#### Areas of Strength:
+
+It's clear that you worked together to create this code 
+
+I enjoyed the diversity of your plot types (no two plots were the same)
+
+first use of error bars I've seen in the final projects so far!
+  
+
+#### Things I learned:
+
+This portion of code was informative:
+ gghighlight(stabbr == "OR") +
+  scale_x_log10("Total Revenue for Support Services",
+                labels = scales::dollar)
+                
+I never knew about these ways to formulate gghighlight or scale_x_log10() functions: so cool that it includes dollar signs within your x-axis!
+
+
+#### Comments for 1st Visualization:
+
+Really like the use of color here (green is well-chosen!) I wonder if condensing the x-axis a bit or plotting change in revenue for support services over time  on x-axis and then filling by state (as you've already done) would make this finding more striking. Right now, the total revenue seems to stay constant while the graduation rate increases, which makes this finding unclear--my intuitive guess is that graduation rates rise when total revenue for support services rises, so really condensing the x-axis (min `$`20,000 to max `$`30,000) could make this trend more apparent, rather than visualizing a vertical line. If, however, this trend isn't found within the data, I could be wrong here. Also, there was a typo on the y-axis ("avereage" changed to "average")
+
+I see you've made a second plot showing the change more clearly! One note on this one: rather than "color = "seagreen"", could you fill by oregon?
+
+#### Comments for 2nd Visualization
+
+Nice use of error bars and the mean cutoff vertical line for the state graduate rates plot! This plot communicates a lot of information quite effectively. I wonder if you might remove DC and Bureau of Indian Affairs since they are not filled and the latter has really large error bars, making it visually distracting for the reader. You might also consider making the vertical line dotted instead of solid (using `linetype = "dotted"`). Would it be possible to include a text box or add a footnote about the missing data as well?
+
+#### Comments for 3rd Visualization
+
+The state graduation rates graph where you're also changing the geom point type by HS PE policy seems to have a little too much going on. Maybe color/fill by PE policy and save filling by region for your other figures. I do like the 95% CI dotted lines, but they are difficult to make out as is. Perhaps instead of labeling them within the plot, you can add a caption below the plot to address them.
+
+#### A few 'best practice' comments:
+
+-adding a description of your data and research questions within the document (not commented within code chunks) will help the reader synthesize the information you're communicating with the visualizations.
+
+-I know you mentioned only including 2011--is there a way to merge datasets across the different years so you can visualize change over time? I know this is probably a big ask...I see you have code related to this so maybe you're already working on it.
