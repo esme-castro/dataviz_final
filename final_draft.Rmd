@@ -117,12 +117,12 @@ state_grads <- left_join(state_info, grad_rates)
 fiscal11 <- fiscal11 %>% 
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
-data_viz3 <- left_join(state_grads, fiscal11)
+data_vizEC <- left_join(state_grads, fiscal11)
 ```
 
-**Visual for class draft assignment**
+**Visual for class draft assignment** _DRAFT 1_
 ```{r viz-3-esme}
-data_viz3 <- data_viz3 %>% 
+data_vizEC <- data_vizEC %>% 
   tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
   filter(!grepl("G|L|P", lower)) %>% 
   mutate(
@@ -134,11 +134,11 @@ data_viz3 <- data_viz3 %>%
   mutate(mean = mean(c(lower, upper))) %>% 
   ungroup()
 
-data_viz3 <- data_viz3 %>% 
+data_vizEC <- data_vizEC %>% 
   group_by(state, region_name) %>% 
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
 
-ggplot(data_viz3, aes(support_mean, mean)) +
+ggplot(data_vizEC, aes(support_mean, mean)) +
   geom_point(color = "seagreen4") +
   gghighlight(stabbr == "OR") +
   scale_x_log10("Total Revenue for Support Services",
@@ -156,6 +156,36 @@ ggplot(data_viz3, aes(support_mean, mean)) +
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 
 ### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
+```
+
+_DRAFT 2_
+```{r try-heatmap}
+data_vizEC <- data_vizEC %>% 
+  tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(mean = mean(c(lower, upper))) %>% 
+  ungroup()
+
+data_vizEC %>% 
+  select(6, 34, 40) %>% 
+  drop_na() %>% 
+  group_by(division_name) %>% 
+  summarize(grads = mean(mean))  ## finished good code here. continue on now
+
+
+data_vizEC %>% 
+  group_by(division_name) %>% 
+  mutate(grads = mean(mean)) %>% 
+  ggplot(aes(totalrev, division_name)) +
+         geom_tile(aes(fill = grads),
+                   color = "white") +
+           coord_fixed()
 ```
 
 
