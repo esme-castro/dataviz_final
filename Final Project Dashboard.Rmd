@@ -1,0 +1,105 @@
+---
+title: "Final Project Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(tidyverse)
+library(plotly)
+```
+
+USA Facts {.sidebar}
+===========
+Different variations of data vizualizations using the 
+[USA Facts](https://usafacts.org), website.
+
+
+# Graduation Rates and Fiscal data
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+
+Column {.tabset}
+-----------------------------------------------------------------------
+### Chart C
+
+```{r}
+
+```
+
+
+# Graduation Rates and CLASS data
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+
+# Graduation Rates per Cohorts
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+
