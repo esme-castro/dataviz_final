@@ -19,6 +19,11 @@ library(ggtext)
 library(ggiraph)
 library(scales)
 library(gghighlight)
+library(writexl)
+library(colorspace)
+library(maps)
+library(albersusa)
+library(cowplot)
 ```
 
 ```{r load-data}
@@ -222,6 +227,8 @@ data.z1 %>%
   theme_minimal()# shows state overall graduation rate with SE by state. . . 
 ```
 
+
+__USE THIS AS V1 OF MY DATA VIZ__
 ```{r zviz-v2}
 #regions_only <- data.z %>% 
   #select(3, 11, 12)
@@ -249,13 +256,6 @@ z1.regions %>%
        subtitle = "By Region",
        caption = "Vertical blue line indicates the graduation rate of the United States",
        color = "Region") 
-
-# 2 - If I can find a way to compress class df to just one value of timehs per state (year 2011, since the grad_rate data is just 2011), I can add a shape aesthetic so that each state then has a color for region and a shape for what category of class$timehs2. Of course, we would still have the national average highlighted, would have names of states that fall below national average in once color, those that fall above in another color. 
-# Want to move the legends to the top left of inside the plot itself. 
-# add descriptive title, subtitle, legend name, x and y labs, caption for data source and notes about missing data.
-# ideally, color code the subtitle to with region names corresponding to colors in legend
-# remove the midpoint vertical lines, just leave major gridlines
-
 ```
 
 ```{r zviz-final-data}
@@ -269,6 +269,8 @@ class.z.2010 <- import(here("data", "class.z.2010.xlsx")) # data to merge into r
 class.z.2010 <- left_join(z1.regions, class.z.2010) # joining
 ```
 
+
+__USE THIS AS V2 OF MY PLOT__
 ```{r zviz-final-plot}
 class.z.2010$avg_timehs2 = as.factor(class.z.2010$avg_timehs2)
 # converting variable to a factor for analysis
@@ -331,102 +333,181 @@ class.z.2010 %>%
                            "5" = "Requires 225 min/wk")) +
   guides(color = guide_legend(order = 1),
          shape = guide_legend(order = 2))
-# This plot shows graduation rate by state. Region where the state falls are colored. PE policy for that state is denoted by shape.
-
-### Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
-
-# Still need to focus on title formatting and fonts (will make standardized with other visuals at the end of project, for presentation)
-
 ```
 
 
-
-
-__MY MESS AROUND PLOTS__ 
-Below plots are components I am considering adding to the final plot. Have yet to figure out how to get the plot to not get congested when using the interactive functions.
-
-Simple Interactive Plot for Testing
-- This is a good, minimal example.
+# Final Plots
 ```{r}
-gg_point = ggplot(data = class.z.2010) +
-  geom_point_interactive(aes(x = state_avg, stnam, 
-                             color = region_name,
-                             shape = avg_timehs2,
-                             tooltip = stnam, data_id = stnam))
-
-z <- girafe(ggobj = gg_point)
-if(interactive() ) print(z)
+mapdata1 <- import(here("data", "dfz.xlsx"))
 ```
 
-The following code chunk is incomplete. Ideally, this would be the final cleaned plot. Having trouble getting the interactivity to work with the aspect ratio. Would likely get rid of state labels on y-axis ... OR get rid of one of the legends and let the interactive component tell what each point corresponds to (e.g., region or HS PE time)
-
-Would like to find a way to make this plot include the states that are missing a value for either region or HS PE Policy that are denoted (all black if NA for region; an X if NA for HS PE Policy)
 ```{r}
-gg_point1 = class.z.2010 %>%  #THIS WORKS BUT DATA GETS PUSHED OFF AND CROWDED
-  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
-  ggplot(aes(state_avg, stnam, color = region_name, shape = avg_timehs2)) +
-  geom_linerange(aes(xmin = state_avg - 1.96 * se,
-                     xmax = state_avg + 1.96 * se),
-                 color = "grey40") +
-  geom_point_interactive(aes(x = state_avg, stnam, 
-                             color = region_name,
-                             shape = avg_timehs2,
-                             tooltip = stnam, data_id = stnam)) +
-  theme_minimal() +
-  geom_vline(xintercept = 78.17352,
-             color = "darkslateblue",
-             linetype = "solid",
-             size = 0.8) +
-  geom_vline(xintercept = 76.14586,
-             color = "red",
-             linetype = "dashed",
-             size = 0.5) +
-  geom_vline(xintercept = 80.17532,
-             color = "red",
-             linetype = "dashed",
-             size = 0.5) +
-  coord_cartesian(xlim = c(60, 90)) +
-  geom_text(aes(x = 79, y = 42,
-                label = "National Average (78.2)"),
-                size = 3,
-                color = "darkslateblue",
-                angle = 270, vjust = 1.2) +
-  geom_text(aes(x = 75.5, y = 42,
-                label = "Lower Limit (76.2)"),
-                size = 3,
-                color = "red",
-                angle = 90, vjust = 1.2) +
-  geom_text(aes(x = 81, y = 42,
-                label = "Upper Limit (80.2)"),
-                size = 3,
-                color = "red",
-                angle = 270, vjust = 1.2) + 
-  theme(panel.grid.major.y = element_blank(), 
-        panel.grid.major.x = element_line(color = "gray85"), 
-        axis.title.x = element_text(face = "bold", size = 12),
-        plot.title = element_text(hjust = .0, size = 14, face = "bold"), 
-        plot.subtitle = element_text(hjust = -.16), 
-        plot.caption = element_text(hjust = .5, size = 10, face = "italic"),
-        legend.title = element_text(size = 10, face = "bold")) +
-  labs(x = "Graduation Rate (%) - 2011",
-       y = "",
-       title = "State Graduation Rates",
-       subtitle = "By Region and High School Physical Education Policy",
-       caption = "DATA NOTE, INSERT NOTE THAT SOME STATES 
-       WERE OMITTED DUE TO MISSING DATA (LIST THOSE STATES",
-       color = "Region",
-       shape = "HS PE Policy") +
-  scale_shape_discrete(labels = 
-                         c("0" = "No Requirement or Recommendation",
-                           "2" = "90 min/wk Minimum",
-                           "3" = "90 - 150 min/wk",
-                           "4" = "150 - 225 min/wk",
-                           "5" = "Requires 225 min/wk")) +
-  guides(color = guide_legend(order = 1),
-         shape = guide_legend(order = 2))
+scale.z <- mapdata1 %>% 
+  group_by(stnam, avg_timehs2, fips) %>% 
+  summarize(
+    grad = mean(state_avg, na.rm = TRUE)) %>% 
+  biscale::bi_class(x = grad, y = avg_timehs2, style = "quantile",
+           dim = 2)
 
-z.1 <- girafe(ggobj = gg_point1)
-if(interactive() ) print(z.1) # How can I make this work. The animation and all components are included, but the plot is smashed together and crowded. 
+names(scale.z)[1] <- "full"
+scale_join <- scale.z %>% left_join(usmap::statepop, by = "full")
+
+plot.z <- usmap::plot_usmap(data = scale.z,
+                            values = "bi_class",
+                            labels = TRUE,
+                            label_color = "white") +
+  biscale::bi_scale_fill(pal = "GrPink", dim = 2, guide = F) +
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  theme(plot.title = element_text(margin = margin(b = 8), 
+                              color = "#ffffff",face = "bold",size = 9,
+                              hjust = 0.5,
+                              family = "Arial"),
+    plot.subtitle = element_text(margin = margin(t=10,b = 25), 
+                                 color = "#ffffff", size = 6, family = "Arial",
+                                 hjust = 0.5),
+    plot.caption =  element_text(margin = margin(t = 20), 
+                                 color = "#ffffff", size = 5, family = "Arial",
+                                 hjust = 0.95),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    axis.text.x    = element_blank(),
+    axis.text.y    = element_blank(),
+    panel.background = element_blank(), 
+    panel.grid.major = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(), 
+    plot.background = element_rect(fill = "#f3f3f3", color = NA),
+    panel.border = element_blank(),
+    plot.margin = unit(c(1, 1, 1, 1), "cm"),
+    axis.ticks = element_blank())
+
+legend.z <- 
+  biscale::bi_legend(pal = "GrPink",
+                     dim = 2,
+                     xlab = "Graduation Rate",
+                     ylab = "PA Time Requirement",
+                     size = 20) +
+  theme(rect = element_rect(fill = "grey10"),
+        panel.border = element_blank(),
+        axis.text = element_blank(),
+        plot.background = element_rect(fill = "#f3f3f3", color = NA),
+        axis.title.x = element_text(size = 10,
+                                    color = "#a1a1a1",
+                                    face = "bold"),
+        axis.title.y = element_text(size = 10,
+                                    color = "#a1a1a1",
+                                    face = "bold"),
+        legend.text = element_text(size = 5),
+        legend.text.align = 0)
+
+ggdraw() +
+  draw_plot(plot.z, 0, 0 , 1, 1) +
+  draw_plot(legend.z, 0 , 0.1, 0.2, 0.2) + 
+  draw_label("Source1: National Center for Education Statistics,
+             Source 2: National Cancer Institute",
+             color = "black", size = 7.5, angle = 0, x = 0.9, y = 0.05) + 
+  draw_label("FILL IN LATER", 
+             color = "black",
+             size = 17,
+             angle = 0,
+             x = 0.5,
+             y = 0.97,
+             fontface = "bold") + 
+  draw_label("
+             Bivariate map showing the combination of the
+             state physical activity requirements and the
+             average graduation rate", 
+             color = "black", size = 14, angle = 0, x =0.5, y = 0.92) + 
+    theme(plot.background = element_rect(fill = "#f3f3f3", color = NA))
+```
+
+# WITH DIFFERENT COLOR PAL
+__THIS WILL BE FINAL VERSION OF PLOT__
+```{r}
+z_pal <- biscale::bi_pal_manual(val_1_1 = "#D9FAFA", val_1_2 = "#7AB1B1",
+val_2_1 = "#2BF7F7", val_2_2 = "#185252")
+
+scale.z1 <- mapdata1 %>% 
+  group_by(stnam, avg_timehs2, fips) %>% 
+  summarize(
+    grad = mean(state_avg, na.rm = TRUE)) %>% 
+  biscale::bi_class(x = grad, y = avg_timehs2, style = "quantile",
+           dim = 2)
+
+names(scale.z1)[1] <- "full"
+scale_join1 <- scale.z1 %>% left_join(usmap::statepop, by = "full")
+
+plot.z1 <- usmap::plot_usmap(data = scale.z1,
+                            values = "bi_class",
+                            labels = TRUE,
+                            label_color = "#ffffff") +
+  biscale::bi_scale_fill(pal = z_pal, dim = 2, guide = "none") +
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  theme(plot.title = element_text(margin = margin(b = 8), 
+                              color = "#ffffff",face = "bold",size = 9,
+                              hjust = 0.5,
+                              family = "Arial"),
+    plot.subtitle = element_text(margin = margin(t=10,b = 25), 
+                                 color = "#ffffff", size = 6, family = "Arial",
+                                 hjust = 0.5),
+    plot.caption =  element_text(margin = margin(t = 20), 
+                                 color = "#ffffff", size = 5, family = "Arial",
+                                 hjust = 0.95),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    axis.text.x    = element_blank(),
+    axis.text.y    = element_blank(),
+    panel.background = element_blank(), 
+    panel.grid.major = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(), 
+    plot.background = element_rect(fill = "white", color = NA), ##f3f3f3
+    panel.border = element_blank(),
+    plot.margin = unit(c(1, 1, 1, 1), "cm"),
+    axis.ticks = element_blank())
+
+legend.z1 <- 
+  biscale::bi_legend(pal = z_pal,
+                     dim = 2,
+                     xlab = "Graduation Rate",
+                     ylab = "PA Time Requirement",
+                     size = 20) +
+  theme(rect = element_rect(fill = "grey10"),
+        panel.border = element_blank(),
+        axis.text = element_blank(),
+        plot.background = element_rect(fill = "#f3f3f3", color = NA),
+        axis.title.x = element_text(size = 10,
+                                    color = "#a1a1a1",
+                                    face = "bold"),
+        axis.title.y = element_text(size = 10,
+                                    color = "#a1a1a1",
+                                    face = "bold"),
+        legend.text = element_text(size = 5),
+        legend.text.align = 0)
+
+ggdraw() +
+  draw_plot(plot.z1, 0, 0 , 1, 1) +
+  draw_plot(legend.z1, 0 , 0.1, 0.2, 0.2) + 
+  draw_label("Source1 National Center for Education Statistics,
+             Source 2 National Cancer Institute",
+             color = "black", size = 7.5, angle = 0, x = 0.8, y = 0.05) + 
+  draw_label("FILL IN LATER", 
+             color = "black",
+             size = 17,
+             angle = 0,
+             x = 0.5,
+             y = 0.97,
+             fontface = "bold") + 
+  draw_label("
+             Bivariate map showing the combination of the
+             state physical activity requirements and the
+             average graduation rate", 
+             color = "black", size = 14, angle = 0, x =0.5, y = 0.92) + 
+    theme(plot.background = element_rect(fill = "#f3f3f3", color = NA))
 ```
 
 
@@ -439,81 +520,3 @@ if(interactive() ) print(z.1) # How can I make this work. The animation and all 
 
 
 ############## End Mandi Viz ###########################
-_For those reviewing, ignore everything below this_
-<!-- ignore everything below -->
-<!-- Working on fiscal data here, ignore for now -->
-We need all years of fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finalized df.
-```{r fiscal-data}
-fiscal_df <- get_fiscal_data()
-
-arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
-## below did not seem to work
-
-## using code below as reference for fiscal data, do not remove yet #####
-# first read in the data
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names()
-
-# write it out as a parquet file
-arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
-
-# read it in again
-class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
-```
-
-
-<!-- ignore below code chunks, this was trying to get geo data, use first code chunk above instead of final project data -->
-################## Below is what I (Zach) have tried to do to merge all data ###########
-``` {r} 
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names() # CLASS Data Set
-class <- class %>% 
-  rename(fips = stfips,
-         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
-class <- class %>% 
-  select(1:3, 6, 18, 47)
-
-grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
-  janitor::clean_names() # graduation rates (and cohorts)
-grad_rates <- grad_rates %>% 
-  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
-grad_rates <- grad_rates %>% 
-  select(1:8, 10, 12:27, 30)
-
-# join grad_rates and CLASS
-class_grads <- left_join(grad_rates, class, by = "fips") 
-  # class df w/ grad rates_state
-class_grads <- class_grads %>% 
-  rename(state = stnam) # to match map df
-class_grads <- class_grads %>% 
-  mutate(state = tolower(state)) # to match maps df
-
-# add state mapping data UNNEEdED IF WE CANNOT FIGURE THIS OUT
-# maps <- map_data("state") %>% # ggplot2::map_data
-  #select(1:5)
-
-# state regions to maps df
-state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
-
-state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
-# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
-
-state_info <- state_info %>% 
-   mutate(state_name = tolower(state_name)) %>% 
-    rename(state = state_name)
-
-# maps <- left_join(state_info, maps, by = "state") # DO NOT NEED THIS IF WE CANNOT FIGURE OUT DF SIZE PROBLEM
-
-#join state_data with class_grads
-# this works, but the df is so large that you cannot view the df.
-
-#class_grads.1 <- left_join(class_grads, maps, by = "state") 
-
-# DO NOT NEED THIS IF WE CANNOT FIGURE OUT GEO DATA FRAME SIZE ISSUE
-# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
-```
-
-```{r}
-# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
-df <- left_join(class_grads, state_info, by = "state") 
-```
