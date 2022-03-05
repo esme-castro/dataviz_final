@@ -16,10 +16,8 @@ library(janitor)
 library(here)
 library(rio)
 library(ggtext)
-library(ggiraph)
 library(scales)
 library(gghighlight)
-library(writexl)
 library(colorspace)
 library(maps)
 library(albersusa)
@@ -254,7 +252,7 @@ z1.regions %>%
        y = "",
        title = "State Graduation Rates",
        subtitle = "By Region",
-       caption = "Vertical blue line indicates the graduation rate of the United States",
+       caption = "Vertical blue line indicates the graduation rate of the United States (78.17%)",
        color = "Region") 
 ```
 
@@ -321,8 +319,8 @@ class.z.2010 %>%
        y = "",
        title = "State Graduation Rates",
        subtitle = "By Region and High School Physical Education Policy",
-       caption = "DATA NOTE, INSERT NOTE THAT SOME STATES 
-       WERE OMITTED DUE TO MISSING DATA (LIST THOSE STATES",
+       caption = "Missing states were omitted if they had missing values
+       for any of the variables",
        color = "Region",
        shape = "HS PE Policy") +
   scale_shape_discrete(labels = 
@@ -441,20 +439,20 @@ scale_join1 <- scale.z1 %>% left_join(usmap::statepop, by = "full")
 
 plot.z1 <- usmap::plot_usmap(data = scale.z1,
                             values = "bi_class",
-                            labels = TRUE,
-                            label_color = "#ffffff") +
+                            labels = FALSE,
+                            label_color = "black") +
   biscale::bi_scale_fill(pal = z_pal, dim = 2, guide = "none") +
   scale_x_continuous(breaks = NULL) +
   scale_y_continuous(breaks = NULL) +
   theme(plot.title = element_text(margin = margin(b = 8), 
                               color = "#ffffff",face = "bold",size = 9,
                               hjust = 0.5,
-                              family = "Arial"),
+                              family = "Times New Roman"),
     plot.subtitle = element_text(margin = margin(t=10,b = 25), 
-                                 color = "#ffffff", size = 6, family = "Arial",
+                                 color = "#ffffff", size = 6, family = "Times New Roman",
                                  hjust = 0.5),
     plot.caption =  element_text(margin = margin(t = 20), 
-                                 color = "#ffffff", size = 5, family = "Arial",
+                                 color = "#ffffff", size = 5, family = "Times New Roman",
                                  hjust = 0.95),
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
@@ -467,7 +465,7 @@ plot.z1 <- usmap::plot_usmap(data = scale.z1,
     panel.grid.minor = element_blank(), 
     plot.background = element_rect(fill = "white", color = NA), ##f3f3f3
     panel.border = element_blank(),
-    plot.margin = unit(c(1, 1, 1, 1), "cm"),
+    plot.margin = unit(c(.5, .5, .5, .5), "cm"),
     axis.ticks = element_blank())
 
 legend.z1 <- 
@@ -476,38 +474,36 @@ legend.z1 <-
                      xlab = "Graduation Rate",
                      ylab = "PA Time Requirement",
                      size = 20) +
-  theme(rect = element_rect(fill = "grey10"),
+  theme(rect = element_rect(fill = "black"),
         panel.border = element_blank(),
         axis.text = element_blank(),
-        plot.background = element_rect(fill = "#f3f3f3", color = NA),
-        axis.title.x = element_text(size = 10,
-                                    color = "#a1a1a1",
+        plot.background = element_rect(fill = NA, color = NA),
+        axis.title.x = element_text(size = 9,
+                                    color = "black",
                                     face = "bold"),
-        axis.title.y = element_text(size = 10,
-                                    color = "#a1a1a1",
+        axis.title.y = element_text(size = 9,
+                                    color = "black",
                                     face = "bold"),
         legend.text = element_text(size = 5),
         legend.text.align = 0)
 
 ggdraw() +
   draw_plot(plot.z1, 0, 0 , 1, 1) +
-  draw_plot(legend.z1, 0 , 0.1, 0.2, 0.2) + 
+  draw_plot(legend.z1, 0.001 , 0.1, 0.3, 0.3) + 
   draw_label("Source1 National Center for Education Statistics,
              Source 2 National Cancer Institute",
-             color = "black", size = 7.5, angle = 0, x = 0.8, y = 0.05) + 
-  draw_label("FILL IN LATER", 
+             color = "black", size = 7.5, angle = 0, x = 0.8, y = 0.1) + 
+  draw_label("More PE Requirements Generally Relate to Higher Graduation Rates", 
              color = "black",
-             size = 17,
+             size = 14,
              angle = 0,
              x = 0.5,
-             y = 0.97,
+             y = 0.95,
              fontface = "bold") + 
-  draw_label("
-             Bivariate map showing the combination of the
-             state physical activity requirements and the
-             average graduation rate", 
-             color = "black", size = 14, angle = 0, x =0.5, y = 0.92) + 
-    theme(plot.background = element_rect(fill = "#f3f3f3", color = NA))
+  draw_label("Bivariate map showing the combination of the state 
+PE requirements and the average graduation rate", 
+             color = "black", size = 12, angle = 0, x =0.5, y = 0.9) + 
+    theme(plot.background = element_rect(fill = "white", color = NA))
 ```
 
 
