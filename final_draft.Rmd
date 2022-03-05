@@ -23,6 +23,7 @@ library(maps)
 library(albersusa)
 library(cowplot)
 library(patchwork)
+library(gganimate)
 ```
 
 ############# ESME VISUALS ################################################
@@ -697,8 +698,69 @@ PE requirements and the average graduation rate",
 ####################### End of Zach Viz #####################
 
 ############# Mandi Vizualization #####################
+```{r}
+group <- import(here("data", "cohorts_rate.xlsx"))
 
+group.m1 <- group %>% 
+  select(stnam, state_cwd, state_lep, state_ecd)
 
+group.m11 <- group.m1 %>% 
+  pivot_longer(
+    cols = starts_with("state_"), 
+    names_to = "cohort",
+    values_to = "rate", 
+    values_drop_na = TRUE
+  )
+group.m11
+
+group.mbind <- group.m1 %>% 
+  rbind(group.m1$state_cwd, group.m1$state_ecd, group.m1$state_lep)
+
+ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
+  geom_bar(stat='identity') +
+  theme_bw() +
+  facet_wrap(~stnam)
+```
+
+```{r}
+ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
+  geom_bar(stat='identity') +
+  scale_fill_discrete( name = "Cohort groups", 
+                       labels =
+                        c("state_cwd" = "Children with disabilities", 
+                          "state_ecd" = "Economically disadvantaged", 
+                          "state_lep" = "Limited English proficiency")) +
+  scale_x_discrete(labels=c("", "", "")) +
+  theme_bw() +
+  facet_wrap(~stnam) 
+```
+
+```{r}
+p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
+  geom_bar(stat='identity') +
+  scale_fill_brewer(name = "Cohort groups", 
+                       labels =
+                        c("state_cwd" = "Children with disabilities", 
+                          "state_ecd" = "Economically disadvantaged", 
+                          "state_lep" = "Limited English proficiency")) +
+  scale_x_discrete(labels=c("", "", "")) +
+  theme_bw() +
+  facet_wrap(~stnam) +
+  labs(x = "", 
+       y = "Rate of graduates", 
+       title = "Graduation rates by special cohorts", 
+       subtitle = "Per each state") +
+  # gganimate specific bits:
+  transition_states(
+    stnam,
+    transition_length = .5,
+    state_length = 2, 
+  ) +
+  ease_aes('sine-in-out')
+
+animate(p, fps = 2)
+
+```
 
 
 
