@@ -22,7 +22,194 @@ library(colorspace)
 library(maps)
 library(albersusa)
 library(cowplot)
+library(patchwork)
 ```
+
+############# ESME VISUALS ################################################
+
+```{r data}
+####### Load state_info, clean, & select columns ############################
+state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+
+state_info <- subset(state_info, select = c(1, 4, 9, 10))
+# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
+state_info <- state_info %>% 
+   mutate(state_name = tolower(state_name)) %>% 
+    rename(state = state_name)
+
+###### Load fiscal data, clean & select columns #############################
+fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
+  janitor::clean_names() %>% 
+  select(leaid, fipst, stabbr, tcurssvc)
+
+fiscal11 <- fiscal11 %>% 
+  mutate(fips = readr::parse_number(fipst))
+
+fiscal11 <- fiscal11 %>%   ## note removed values of -1 & -2 in tcurssvc
+  filter(tcurssvc > 1)
+
+fiscal11 <- fiscal11 %>% 
+  group_by(stabbr) %>% 
+  mutate(avgserv = mean(tcurssvc))
+
+fiscal11 <- fiscal11[!duplicated(fiscal11$stabbr), ]
+
+##### Load grad rates, clean, & select columns ##############################
+grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
+  janitor::clean_names() # graduation rates (and cohorts)
+
+grad_rates <- grad_rates %>% 
+  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
+
+grad_rates <- grad_rates %>% 
+  select(2,30)
+
+grad_rates <- grad_rates %>% 
+  tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(avggrad = mean(c(lower, upper))) %>% 
+  ungroup()
+
+grad_rates <- grad_rates %>% 
+  group_by(fips) %>% 
+  mutate(avggrad = mean(avggrad))
+
+grad_rates <- grad_rates[!duplicated(grad_rates$fips), ]
+```
+
+```{r join-data}
+data.e <- left_join(state_info, fiscal11)
+
+data.e <- left_join(data, grad_rates)
+
+data.e <- data.e %>% 
+  group_by(state) %>% 
+  mutate(gradavg = mean(c(lower, upper)))
+  
+data.e <- data.e %>% 
+  select(1, 3, 7, 9, 13)
+
+# overall average for revenue
+y <- mean(data$avgserv)
+```
+
+```{r visual-support-serv-viz1-2}
+data.e %>%                             ## viz 1
+  ggplot(aes(avgserv, state)) +
+  geom_col(fill = "seagreen4") +
+  scale_x_log10("Average Revenue for Instruction",
+                labels = scales::dollar) +
+  theme_minimal()
+
+data.e %>%                             ## viz 2
+  ggplot(aes(avgserv, state)) +
+  geom_col(aes(fill = region_name)) +
+  scale_fill_brewer() +
+  geom_vline(xintercept = y, lty = "dashed") +
+  scale_x_log10("Average Revenue for Support Services",
+                labels = scales::dollar) +
+  theme_minimal() +
+  labs(y = "",
+       title = "State Revenue for Support Services",
+       caption = "Fiscal data collected in 2011",
+       fill = "Region")
+```
+
+```{r visual-graduation-viz1-2}
+data.e %>%                                  ## viz 1
+  ggplot(aes(gradavg, state)) +
+  geom_col(fill = "seagreen4") +
+  scale_x_log10("Average Graduation Rates",
+                labels = scales::dollar) +
+  theme_minimal()
+
+data.e %>%                                  ## viz 2
+  ggplot(aes(gradavg, state)) +
+  geom_col(aes(fill = region_name)) +
+  scale_fill_brewer() +
+  geom_vline(xintercept = x, lty = "dashed") +
+  scale_x_log10("Average Revenue for Instruction",
+                labels = scales::dollar) +
+  theme_minimal() +
+  labs(y = "",
+       title = "Average Graduation Rates",
+       fill = "Region")
+```
+
+<!-- actual visuals will have each iteration of both plots side by side OR just the final one? Just final visual and can show the iterations of the fiscal support services for viz 1 and 2 -->
+
+```{r viz-3}
+e <- data.e %>%      ## viz 3
+  ggplot(aes(avgserv, fct_reorder(state, avgserv))) +
+  geom_col(aes(fill = region_name)) +
+  scale_fill_brewer() +
+  geom_vline(xintercept = y, lty = "dashed", color = "gray80") +
+  scale_x_log10("Average Revenue for Support Services",
+                labels = scales::dollar, expand = c(0,0)) +
+  theme_minimal() +
+  labs(y = "",
+       title = "State Revenue for Support Services",
+       caption = "Fiscal data collected in 2011",
+       fill = "Region") +
+  theme(plot.title = element_text(face = "bold", size = 14,
+                                  color = "gray80"),
+        axis.title.x = element_text(face = "bold", size = 11,
+                                    color = "gray80"),
+        legend.title = element_text(face = "bold", color = "gray80"),
+        legend.position = "none",
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(color = "gray80"),
+        panel.background = element_rect(fill = "gray30"),
+        plot.background = element_rect(fill = "gray10"),
+        panel.grid.major = element_line(color = "gray80"), 
+        panel.grid.minor = element_line(color = "gray30"),
+        legend.text = element_text(colour = "gray80"),
+        plot.caption = element_text(color = "gray80"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+c <- data.e %>%      ## viz 3
+  ggplot(aes(gradavg, fct_reorder(state, gradavg))) +
+  geom_col(aes(fill = region_name)) +
+  scale_fill_brewer() +
+  geom_vline(xintercept = x, lty = "dashed") +
+  theme_minimal() +
+  labs(y = "",
+       x = "Average Graduation Rates",
+       title = "Graduation Rates",
+       fill = "Region") +
+  theme(plot.title = element_text(face = "bold",size = 14, color = "gray80"),
+        axis.title.x = element_text(face = "bold", size = 11, color = "gray80"),
+        legend.title = element_text(face = "bold", color = "gray80"),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 12, face = "bold"),
+        axis.text = element_text(color = "gray80"),
+        panel.background = element_rect(fill = "gray30"),
+        plot.background = element_rect(fill = "gray10"),
+        panel.grid.major = element_line(color = "gray80"), 
+        panel.grid.minor = element_line(color = "gray30"),
+        legend.text = element_text(colour = "gray80"),
+        plot.caption = element_text(color = "gray80"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+e + c + plot_annotation("State Revenue for Instruction and Support Services")
+```
+
+<!-- capitalize first letter state names -->
+<!-- possible to remove dark border around plot? -->
+<!-- major x grid lines visible behind bars, want to remove -->
+<!-- remove NAs to bottom in grad rates -->
+
+#######################################################################
+
 
 ```{r load-data}
 ######## Load CLASS data, clean, & select columns ########################
