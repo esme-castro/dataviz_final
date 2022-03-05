@@ -118,11 +118,14 @@ fiscal11 <- fiscal11 %>%
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
 data_vizEC <- left_join(state_grads, fiscal11)
+
+df.e <- data_vizEC %>% 
+  select(1, 5:10, 12:13, 16:29, 32:38)
 ```
 
 **Visual for class draft assignment** _DRAFT 1_
 ```{r viz-3-esme}
-data_vizEC <- data_vizEC %>% 
+df.e1 <- data_vizEC %>% 
   tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
   filter(!grepl("G|L|P", lower)) %>% 
   mutate(
@@ -134,11 +137,11 @@ data_vizEC <- data_vizEC %>%
   mutate(mean = mean(c(lower, upper))) %>% 
   ungroup()
 
-data_vizEC <- data_vizEC %>% 
+df.e1 <- df.e1 %>% 
   group_by(state, region_name) %>% 
   mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
 
-ggplot(data_vizEC, aes(support_mean, mean)) +
+ggplot(df.e1, aes(support_mean, mean)) +
   geom_point(color = "seagreen4") +
   gghighlight(stabbr == "OR") +
   scale_x_log10("Total Revenue for Support Services",
@@ -155,12 +158,12 @@ ggplot(data_vizEC, aes(support_mean, mean)) +
         plot.title = element_text(size = 16, face = "bold"),
         plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 
-### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
+### change to all_rates instead of ecd_rate
 ```
 
 _DRAFT 2_
 ```{r try-heatmap}
-data_vizEC <- data_vizEC %>% 
+df.e2 <- data_vizEC %>% 
   tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
   filter(!grepl("GE|GT|LE|PS", lower)) %>% 
   mutate(
@@ -172,21 +175,130 @@ data_vizEC <- data_vizEC %>%
   mutate(mean = mean(c(lower, upper))) %>% 
   ungroup()
 
-data_vizEC %>% 
+df.e2 %>% 
   select(6, 34, 40) %>% 
   drop_na() %>% 
   group_by(division_name) %>% 
-  summarize(grads = mean(mean))  ## finished good code here. continue on now
+  summarize(grads = mean(mean))
 
 
-data_vizEC %>% 
+df.e2 %>% 
   group_by(division_name) %>% 
   mutate(grads = mean(mean)) %>% 
   ggplot(aes(totalrev, division_name)) +
          geom_tile(aes(fill = grads),
-                   color = "white") +
+                   color = "seagreen4") +
+  scale_x_log10("Total Revenue for Support Services",
+                labels = scales::dollar) +
            coord_fixed()
 ```
+
+_DRAFT 3_
+```{r}
+df.e3 <- data_vizEC %>% 
+  tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(mean = mean(c(lower, upper))) %>% 
+  ungroup()
+
+df.e3 %>% 
+  select(6, 34, 40) %>% 
+  drop_na() %>% 
+  group_by(division_name) %>% 
+  summarize(totalrev = mean(mean))
+
+df.e3 %>% 
+  group_by(division_name) %>% 
+  mutate(totalrev = mean(mean)) %>% 
+  ggplot(aes(mean, division_name)) +
+  geom_tile(aes(fill = totalrev),
+            color = "cornflowerblue") +
+  coord_fixed()
+
+### First, get state averages for graduation rates
+df.e3 <- df.e3 %>% 
+  group_by(state) %>% 
+  drop_na(mean) %>% 
+  mutate(gradrate = mean(mean))
+
+### Second, get region averages for graduation rates
+df.e3 <- df.e3 %>% 
+  group_by(division_name) %>% 
+  mutate(gradregion = mean(gradrate))
+
+### Third, get average revenue by state
+df.e3 <- df.e3 %>% 
+  group_by(state) %>% 
+  drop_na(totalrev) %>% 
+  mutate(statetotalrev = mean(totalrev))
+
+## Fourth, get average revenue by region
+df.e3 <- df.e3 %>% 
+  group_by(division_name) %>% 
+  mutate(revregion = mean(statetotalrev))
+
+## Plot the heatmap
+df.e3 %>% 
+  ggplot(aes(gradregion, division_name)) +
+  geom_tile(aes(fill = revregion),
+            color = "cornflowerblue") +
+  coord_fixed() +
+      scale_fill_distiller(palette = "Greens",
+                      na.value = "#transparent") +
+    theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+
+### make into bins the total revenue axis (to make categorical so we can plot our heatmap)
+```
+
+_DRAFT 3 TRYING NON-HEATMAP_
+```{r}
+df.e <- df.e %>% 
+  tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(gradrate = mean(c(lower, upper))) %>% 
+  ungroup()
+
+# avg grads by state
+df.e <- df.e %>% 
+  group_by(state) %>% 
+  drop_na(gradrate) %>% 
+  mutate(avgstategrads = mean(gradrate))
+
+# avg totalrev by state
+df.e <- df.e %>% 
+  group_by(state) %>% 
+  drop_na(totalrev) %>% 
+  mutate(avgtotalrev = mean(totalrev))
+
+df.e %>%   ### look at Colors! slides for more add-ons; slide 95+
+  ggplot(aes(avgtotalrev, avgstategrads)) +
+  geom_point(data = filter(df.e, region_name == "Midwest"),
+             color = "red") +
+  geom_point(data = filter(df.e, region_name == "South"),
+             color = "blue") +
+  geom_point(data = filter(df.e, region_name == "West"),
+             color = "green") +
+  geom_point(data = filter(df.e, region_name == "Northeast"),
+             color = "yellow") +
+  scale_x_log10("Average Total Revenue for Support Services",
+                labels = scales::dollar) +
+  labs(y = "Average Graduation Rates")
+```
+
 
 
 <!-- trying something, Mandi this is the code I (Esme) showed you-->
@@ -469,81 +581,3 @@ if(interactive() ) print(z.1) # How can I make this work. The animation and all 
 
 
 ############## End Mandi Viz ###########################
-_For those reviewing, ignore everything below this_
-<!-- ignore everything below -->
-<!-- Working on fiscal data here, ignore for now -->
-We need all years of fiscal data in one df that can be joined to grad_rates (after we merge CLASS data too) to make our finalized df.
-```{r fiscal-data}
-fiscal_df <- get_fiscal_data()
-
-arrow::write_parquet(fiscal_df, here::here("data", "fiscal_df.parquet"))
-## below did not seem to work
-
-## using code below as reference for fiscal data, do not remove yet #####
-# first read in the data
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names()
-
-# write it out as a parquet file
-arrow::write_parquet(class, here::here("data", "Class20032019.parquet"))
-
-# read it in again
-class2 <- arrow::read_parquet(here::here("data", "Class20032019.parquet"))
-```
-
-
-<!-- ignore below code chunks, this was trying to get geo data, use first code chunk above instead of final project data -->
-################## Below is what I (Zach) have tried to do to merge all data ###########
-``` {r} 
-class <- import(here("data", "Class20032019.xlsx")) %>% 
-  janitor::clean_names() # CLASS Data Set
-class <- class %>% 
-  rename(fips = stfips,
-         state_abbr = state) # make class data a fips that matches grad_rates df, same with the state abbreviation.
-class <- class %>% 
-  select(1:3, 6, 18, 47)
-
-grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
-  janitor::clean_names() # graduation rates (and cohorts)
-grad_rates <- grad_rates %>% 
-  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
-grad_rates <- grad_rates %>% 
-  select(1:8, 10, 12:27, 30)
-
-# join grad_rates and CLASS
-class_grads <- left_join(grad_rates, class, by = "fips") 
-  # class df w/ grad rates_state
-class_grads <- class_grads %>% 
-  rename(state = stnam) # to match map df
-class_grads <- class_grads %>% 
-  mutate(state = tolower(state)) # to match maps df
-
-# add state mapping data UNNEEdED IF WE CANNOT FIGURE THIS OUT
-# maps <- map_data("state") %>% # ggplot2::map_data
-  #select(1:5)
-
-# state regions to maps df
-state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
-
-state_info <- subset(state_info, select = c(1, 4, 6, 7, 9, 10))
-# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
-
-state_info <- state_info %>% 
-   mutate(state_name = tolower(state_name)) %>% 
-    rename(state = state_name)
-
-# maps <- left_join(state_info, maps, by = "state") # DO NOT NEED THIS IF WE CANNOT FIGURE OUT DF SIZE PROBLEM
-
-#join state_data with class_grads
-# this works, but the df is so large that you cannot view the df.
-
-#class_grads.1 <- left_join(class_grads, maps, by = "state") 
-
-# DO NOT NEED THIS IF WE CANNOT FIGURE OUT GEO DATA FRAME SIZE ISSUE
-# if this is simply too large, we may have to try and work by creating plots using two separate dataframes? class_grads and state_data
-```
-
-```{r}
-# FULL DATA FRAME without geographic info. Therefore, if using this, we will not be able to make maps of data viz
-df <- left_join(class_grads, state_info, by = "state") 
-```
