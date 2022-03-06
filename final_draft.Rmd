@@ -1,7 +1,7 @@
 ---
 title: "Final_Draft"
 author: "Esme, Zach, & Mandi"
-date: "2/21/2022"
+date: "3/7/2022"
 output: html_document
 ---
 
@@ -30,11 +30,11 @@ library(gganimate)
 
 ```{r data}
 ####### Load state_info, clean, & select columns ############################
-state_info <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
+state_info.e <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
-state_info <- subset(state_info, select = c(1, 4, 9, 10))
+state_info.e <- subset(state_info.e, select = c(1, 4, 9, 10))
 # just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
-state_info <- state_info %>% 
+state_info.e <- state_info.e %>% 
    mutate(state_name = tolower(state_name)) %>% 
     rename(state = state_name)
 
@@ -56,16 +56,16 @@ fiscal11 <- fiscal11 %>%
 fiscal11 <- fiscal11[!duplicated(fiscal11$stabbr), ]
 
 ##### Load grad rates, clean, & select columns ##############################
-grad_rates <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
+grad_rates.e <- get_data("EDFacts_acgr_lea_2011_2019") %>% 
   janitor::clean_names() # graduation rates (and cohorts)
 
-grad_rates <- grad_rates %>% 
+grad_rates.e <- grad_rates.e %>% 
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
-grad_rates <- grad_rates %>% 
+grad_rates.e <- grad_rates.e %>% 
   select(2,30)
 
-grad_rates <- grad_rates %>% 
+grad_rates.e <- grad_rates.e %>% 
   tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
   filter(!grepl("GE|GT|LE|PS", lower)) %>% 
   mutate(
@@ -77,39 +77,40 @@ grad_rates <- grad_rates %>%
   mutate(avggrad = mean(c(lower, upper))) %>% 
   ungroup()
 
-grad_rates <- grad_rates %>% 
+grad_rates.e <- grad_rates.e %>% 
   group_by(fips) %>% 
   mutate(avggrad = mean(avggrad))
 
-grad_rates <- grad_rates[!duplicated(grad_rates$fips), ]
+grad_rates.e <- grad_rates.e[!duplicated(grad_rates.e$fips), ]
 ```
 
 ```{r join-data}
-data.e <- left_join(state_info, fiscal11)
+data.e <- left_join(state_info.e, fiscal11)
 
-data.e <- left_join(data, grad_rates)
+data.e <- left_join(data.e, grad_rates.e)
 
 data.e <- data.e %>% 
-  group_by(state) %>% 
-  mutate(gradavg = mean(c(lower, upper)))
+    group_by(state_name) %>% 
+    mutate(gradavg = mean(c(lower, upper)))
   
 data.e <- data.e %>% 
   select(1, 3, 7, 9, 13)
 
 # overall average for revenue
-y <- mean(data$avgserv)
+y <- mean(data.e$avgserv)
+x <- mean(data.e$gradavg, na.rm = TRUE)
 ```
 
 ```{r visual-support-serv-viz1-2}
 data.e %>%                             ## viz 1
-  ggplot(aes(avgserv, state)) +
+  ggplot(aes(avgserv, state_name)) +
   geom_col(fill = "seagreen4") +
   scale_x_log10("Average Revenue for Instruction",
                 labels = scales::dollar) +
   theme_minimal()
 
 data.e %>%                             ## viz 2
-  ggplot(aes(avgserv, state)) +
+  ggplot(aes(avgserv, state_name)) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
   geom_vline(xintercept = y, lty = "dashed") +
@@ -124,19 +125,15 @@ data.e %>%                             ## viz 2
 
 ```{r visual-graduation-viz1-2}
 data.e %>%                                  ## viz 1
-  ggplot(aes(gradavg, state)) +
+  ggplot(aes(gradavg, state_name)) +
   geom_col(fill = "seagreen4") +
-  scale_x_log10("Average Graduation Rates",
-                labels = scales::dollar) +
   theme_minimal()
 
 data.e %>%                                  ## viz 2
-  ggplot(aes(gradavg, state)) +
+  ggplot(aes(gradavg, state_name)) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
   geom_vline(xintercept = x, lty = "dashed") +
-  scale_x_log10("Average Revenue for Instruction",
-                labels = scales::dollar) +
   theme_minimal() +
   labs(y = "",
        title = "Average Graduation Rates",
@@ -147,7 +144,7 @@ data.e %>%                                  ## viz 2
 
 ```{r viz-3}
 e <- data.e %>%      ## viz 3
-  ggplot(aes(avgserv, fct_reorder(state, avgserv))) +
+  ggplot(aes(avgserv, fct_reorder(state_name, avgserv))) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
   geom_vline(xintercept = y, lty = "dashed", color = "gray80") +
@@ -177,7 +174,7 @@ e <- data.e %>%      ## viz 3
         panel.grid.minor.x = element_blank())
 
 c <- data.e %>%      ## viz 3
-  ggplot(aes(gradavg, fct_reorder(state, gradavg))) +
+  ggplot(aes(gradavg, fct_reorder(state_name, gradavg))) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
   geom_vline(xintercept = x, lty = "dashed") +
@@ -186,8 +183,10 @@ c <- data.e %>%      ## viz 3
        x = "Average Graduation Rates",
        title = "Graduation Rates",
        fill = "Region") +
-  theme(plot.title = element_text(face = "bold",size = 14, color = "gray80"),
-        axis.title.x = element_text(face = "bold", size = 11, color = "gray80"),
+  theme(plot.title = element_text(face = "bold",size = 14,
+                                  color = "gray80"),
+        axis.title.x = element_text(face = "bold", size = 11,
+                                    color = "gray80"),
         legend.title = element_text(face = "bold", color = "gray80"),
         axis.text.x = element_text(size = 10),
         axis.text.y = element_text(size = 12, face = "bold"),
@@ -201,7 +200,7 @@ c <- data.e %>%      ## viz 3
         panel.grid.major.y = element_blank(),
         panel.grid.minor.x = element_blank())
 
-e + c + plot_annotation("State Revenue for Instruction and Support Services")
+e + c + plot_annotation("State Revenue for Support Services and Graduation Rates")
 ```
 
 <!-- capitalize first letter state names -->
@@ -249,125 +248,6 @@ state_info <- state_info %>%
 
 ###### Merge class_grads with state_info data ##################################
 data <- left_join(class_grads, state_info) # this has grad rates and state info
-```
-
-```{r fiscal-data}
-## commenting out fiscal data other than 2011 for now ###################
-## trying out visual with just one then will work to merge later ########
-
-#fiscal10 <- get_data("NCES_CCD_fiscal_district_2010") %>% 
-#  janitor::clean_names() %>% 
-#  select(leaid, fipst, stabbr, totalrev, tfedrev,
-#         tstrev, tlocrev, tcurinst, tcurssvc)
-
-fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
-  janitor::clean_names() %>% 
-  select(leaid, fipst, stabbr, totalrev, tfedrev,
-         tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal12 <- get_data("NCES_CCD_fiscal_district_2012") %>% 
- # janitor::clean_names() %>% 
-#  select(leaid, fipst, stabbr, totalrev, tfedrev,
- #        tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal13 <- get_data("NCES_CCD_fiscal_district_2013") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal14 <- get_data("NCES_CCD_fiscal_district_2014") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal15 <- get_data("NCES_CCD_fiscal_district_2015") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal16 <- get_data("NCES_CCD_fiscal_district_2016") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal17 <- get_data("NCES_CCD_fiscal_district_2017") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-#fiscal18 <- get_data("NCES_CCD_fiscal_district_2018") %>% 
- # janitor::clean_names() %>% 
-  #select(leaid, fipst, stabbr, totalrev, tfedrev,
-   #      tstrev, tlocrev, tcurinst, tcurssvc)
-
-
-# Merge data (state_info, grads, and fiscal11)
-state_grads <- left_join(state_info, grad_rates)
-
-# Merge state_grads with fiscal11
-fiscal11 <- fiscal11 %>% 
-  mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
-
-data_viz3 <- left_join(state_grads, fiscal11)
-```
-
-**Visual for class draft assignment**
-```{r viz-3-esme}
-data_viz3 <- data_viz3 %>% 
-  tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
-  filter(!grepl("G|L|P", lower)) %>% 
-  mutate(
-    upper = ifelse(is.na(upper), lower, upper),
-    lower = as.numeric(lower),
-    upper = as.numeric(upper)
-  ) %>% 
-  rowwise() %>% 
-  mutate(mean = mean(c(lower, upper))) %>% 
-  ungroup()
-
-data_viz3 <- data_viz3 %>% 
-  group_by(state, region_name) %>% 
-  mutate(support_mean = mean(tcurssvc, na.rm = TRUE))
-
-ggplot(data_viz3, aes(support_mean, mean)) +
-  geom_point(color = "seagreen4") +
-  gghighlight(stabbr == "OR") +
-  scale_x_log10("Total Revenue for Support Services",
-                labels = scales::dollar) +
-  labs(y = "Averaege Graduation Rates",
-       title = "Graduation Rates of Economically Disadvantaged Students",
-       subtitle = "by Revenue for Support Services in Oregon",
-       caption = "Data collected from 2011") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(face = "bold"),
-        axis.text.y = element_text(face = "bold"),
-        axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"),
-        plot.title = element_text(size = 16, face = "bold"),
-        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
-
-### thinking to show various group rates vs each other (maybe?), maybe grouping into categorical variables since would love to make a heatmap but might not be the best visual for this data actually. Original idea for a heatmap was y = school district or state, x = revenue (make categorical?), and fill by HS grad rates ###################
-```
-
-
-<!-- trying something, Mandi this is the code I (Esme) showed you-->
-```{r viz-code-for-part-of-Q1}
-data_viz3 %>% 
-  group_by(state, region_name) %>% 
-  mutate(support_mean = mean(tcurssvc, na.rm = TRUE)) %>% 
-  ggplot(aes(mean, state)) +
-  geom_point(color = "seagreen4") +
-  labs(y = "Averaege Graduation Rates",
-       title = "Graduation Rates of Economically Disadvantaged Students",
-       subtitle = "by state",
-       caption = "Data collected from 2011") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(face = "bold"),
-        axis.text.y = element_text(face = "bold"),
-        axis.title.x = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(size = 14, face = "bold"),
-        plot.title = element_text(size = 16, face = "bold"),
-        plot.subtitle = element_text(size = 11, face = "bold", hjust = 0))
 ```
 
 ################################# ZACHS VIZ #############################################
