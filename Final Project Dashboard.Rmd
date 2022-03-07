@@ -26,10 +26,10 @@ library(patchwork)
 library(gganimate)
 ```
 
-USA Facts {.sidebar}
-===========
-Different variations of data vizualizations using the 
-[USA Facts](https://usafacts.org), website. 
+<!-- USA Facts {.sidebar} -->
+<!-- =========== -->
+<!-- Different variations of data vizualizations using the  -->
+<!-- [USA Facts](https://usafacts.org), website and the [CLASS NCI](https://class.cancer.gov), website. -->
 
 
 # Graduation Rates and Fiscal data
@@ -37,7 +37,7 @@ Different variations of data vizualizations using the
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart A
+### Final
 
 ```{r}
 state_info.e <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
@@ -107,44 +107,6 @@ data.e <- data.e %>%
 y <- mean(data.e$avgserv)
 x <- mean(data.e$gradavg, na.rm = TRUE)
 
-data.e %>%                             ## viz 2
- ggplot(aes(avgserv, state_name)) +
-  geom_col(aes(fill = region_name)) +
-  scale_fill_brewer() +
-  geom_vline(xintercept = y, lty = "dashed") +
-  scale_x_log10("Average Revenue for Support Services",
-                labels = scales::dollar) +
-  theme_minimal() +
-  labs(y = "",
-       title = "State Revenue for Support Services",
-       caption = "Fiscal data collected in 2011",
-       fill = "Region")
-```
-
-Column {data-width=350}
------------------------------------------------------------------------
-
-### Chart B
-
-```{r}
-
-data.e %>%                                  ## viz 2
-  ggplot(aes(gradavg, state_name)) +
-  geom_col(aes(fill = region_name)) +
-  scale_fill_brewer() +
-  geom_vline(xintercept = x, lty = "dashed") +
-  scale_x_log10("Average Revenue for Instruction",
-                labels = scales::dollar) +
-  theme_minimal() +
-  labs(y = "",
-       title = "Average Graduation Rates",
-       fill = "Region")
-```
-
-
-### Chart C
-
-```{r}
 e <- data.e %>%      ## viz 3
   ggplot(aes(avgserv, fct_reorder(state_name, avgserv))) +
   geom_col(aes(fill = region_name)) +
@@ -203,13 +165,45 @@ c <- data.e %>%      ## viz 3
 e + c + plot_annotation("State Revenue for Instruction and Support Services")
 ```
 
-
-# Graduation Rates and Cohort data
-
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart A
+### Iteration 1
+
+```{r}
+data.e %>%                             ## viz 1
+  ggplot(aes(avgserv, state_name)) +
+  geom_col(fill = "seagreen4") +
+  scale_x_log10("Average Revenue for Instruction",
+                labels = scales::dollar) +
+  theme_minimal()
+```
+
+
+### Iteration 2
+
+```{r}
+data.e %>%                                  ## viz 2
+  ggplot(aes(gradavg, state_name)) +
+  geom_col(aes(fill = region_name)) +
+  scale_fill_brewer() +
+  geom_vline(xintercept = x, lty = "dashed") +
+  scale_x_log10("Average Revenue for Instruction",
+                labels = scales::dollar) +
+  theme_minimal() +
+  labs(y = "",
+       title = "Average Graduation Rates",
+       fill = "Region")
+
+```
+
+
+# Graduation Rates and Cohort data
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Final
 
 ```{r}
 group <- import(here("data", "cohorts_rate.xlsx"))
@@ -224,39 +218,10 @@ group.m11 <- group.m1 %>%
     values_to = "rate", 
     values_drop_na = TRUE
   )
-group.m11
 
 group.mbind <- group.m1 %>% 
   rbind(group.m1$state_cwd, group.m1$state_ecd, group.m1$state_lep)
 
-ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
-  geom_bar(stat='identity') +
-  theme_bw() +
-  facet_wrap(~stnam)
-```
-
-Column {data-width=350}
------------------------------------------------------------------------
-
-### Chart B
-
-```{r}
-ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
-  geom_bar(stat='identity') +
-  scale_fill_discrete( name = "Cohort groups", 
-                       labels =
-                        c("state_cwd" = "Children with disabilities", 
-                          "state_ecd" = "Economically disadvantaged", 
-                          "state_lep" = "Limited English proficiency")) +
-  scale_x_discrete(labels=c("", "", "")) +
-  theme_bw() +
-  facet_wrap(~stnam) 
-```
-
-
-### Chart C
-
-```{r}
 p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
   geom_bar(stat='identity') +
   scale_fill_brewer(name = "Cohort groups", 
@@ -268,7 +233,7 @@ p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
   theme_bw() +
   facet_wrap(~stnam) +
   labs(x = "", 
-       y = "Rate of graduates", 
+       y = "Graduation rate", 
        title = "Graduation rates by special cohorts", 
        subtitle = "Per each state") +
   # gganimate specific bits:
@@ -283,13 +248,45 @@ animate(p, fps = 2)
 
 ```
 
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### Iteration 1
+
+```{r}
+ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
+  geom_bar(stat='identity') +
+  theme_bw() +
+  facet_wrap(~stnam)
+
+
+```
+
+
+### Iteration 2
+
+```{r}
+ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
+  geom_bar(stat='identity') +
+  scale_fill_discrete( name = "Cohort groups", 
+                       labels =
+                        c("state_cwd" = "Children with disabilities", 
+                          "state_ecd" = "Economically disadvantaged", 
+                          "state_lep" = "Limited English proficiency")) +
+  scale_x_discrete(labels=c("", "", "")) +
+  theme_bw() +
+  facet_wrap(~stnam) 
+
+
+```
+
 
 # Graduation Rates and CLASS data
 
-Column {data-width=350}
+Column {data-width=650}
 -----------------------------------------------------------------------
 
-### Chart A
+### Final
 
 ```{r}
 
@@ -356,6 +353,102 @@ data.z1$national_avg <- data.z1 %>%
 data.z1$se_national <- data.z1 %>% 
   summarize(se_national = sd(state_avg)/sqrt(n())) 
 
+
+regions_only <- data.z %>% 
+  select(4, 14, 15) %>% 
+  unique()
+z1.regions <- left_join(data.z1, regions_only, by = "stnam") #adding regions to df for plotting
+
+mapdata1 <- import(here("data", "dfz.xlsx"))
+
+z_pal <- biscale::bi_pal_manual(val_1_1 = "#D9FAFA", val_1_2 = "#7AB1B1",
+val_2_1 = "#2BF7F7", val_2_2 = "#185252")
+
+scale.z1 <- mapdata1 %>% 
+  group_by(stnam, avg_timehs2, fips) %>% 
+  summarize(
+    grad = mean(state_avg, na.rm = TRUE)) %>% 
+  biscale::bi_class(x = grad, y = avg_timehs2, style = "quantile",
+           dim = 2)
+
+names(scale.z1)[1] <- "full"
+scale_join1 <- scale.z1 %>% left_join(usmap::statepop, by = "full")
+
+plot.z1 <- usmap::plot_usmap(data = scale.z1,
+                            values = "bi_class",
+                            labels = FALSE,
+                            label_color = "black") +
+  biscale::bi_scale_fill(pal = z_pal, dim = 2, guide = "none") +
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  theme(plot.title = element_text(margin = margin(b = 8), 
+                              color = "#ffffff",face = "bold",size = 9,
+                              hjust = 0.5,
+                              family = "Times New Roman"),
+    plot.subtitle = element_text(margin = margin(t=10,b = 25), 
+                                 color = "#ffffff", size = 6, family = "Times New Roman",
+                                 hjust = 0.5),
+    plot.caption =  element_text(margin = margin(t = 20), 
+                                 color = "#ffffff", size = 5, family = "Times New Roman",
+                                 hjust = 0.95),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.title = element_blank(),
+    axis.text.x    = element_blank(),
+    axis.text.y    = element_blank(),
+    panel.background = element_blank(), 
+    panel.grid.major = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(), 
+    plot.background = element_rect(fill = "white", color = NA), ##f3f3f3
+    panel.border = element_blank(),
+    plot.margin = unit(c(.5, .5, .5, .5), "cm"),
+    axis.ticks = element_blank())
+
+legend.z1 <- 
+  biscale::bi_legend(pal = z_pal,
+                     dim = 2,
+                     xlab = "Graduation Rate",
+                     ylab = "PA Time Requirement",
+                     size = 20) +
+  theme(rect = element_rect(fill = "black"),
+        panel.border = element_blank(),
+        axis.text = element_blank(),
+        plot.background = element_rect(fill = NA, color = NA),
+        axis.title.x = element_text(size = 9,
+                                    color = "black",
+                                    face = "bold"),
+        axis.title.y = element_text(size = 9,
+                                    color = "black",
+                                    face = "bold"),
+        legend.text = element_text(size = 5),
+        legend.text.align = 0)
+
+ggdraw() +
+  draw_plot(plot.z1, 0, 0 , 1, 1) +
+  draw_plot(legend.z1, 0.001 , 0.1, 0.3, 0.3) + 
+  draw_label("Source1 National Center for Education Statistics,
+             Source 2 National Cancer Institute",
+             color = "black", size = 7.5, angle = 0, x = 0.8, y = 0.1) + 
+  draw_label("PE Requirements Relate to Higher Graduation Rates", 
+             color = "black",
+             size = 14,
+             angle = 0,
+             x = 0.5,
+             y = 0.95,
+             fontface = "bold") + 
+  draw_label("Bivariate map showing the combination of the state 
+PE requirements and the average graduation rate", 
+             color = "black", size = 12, angle = 0, x =0.5, y = 0.9) + 
+    theme(plot.background = element_rect(fill = "white", color = NA))
+```
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### Iteration 1
+
+```{r}
 data.z1 %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
   ggplot(aes(state_avg, stnam)) +
@@ -364,11 +457,6 @@ data.z1 %>%
                  color = "grey40") +
   geom_point() +
   theme_minimal()
-
-regions_only <- data.z %>% 
-  select(4, 14, 15) %>% 
-  unique()
-z1.regions <- left_join(data.z1, regions_only, by = "stnam") #adding regions to df for plotting
 
 z1.regions %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
@@ -388,12 +476,12 @@ z1.regions %>%
        subtitle = "By Region",
        caption = "Vertical blue line indicates the graduation rate of the United States (78.17%)",
        color = "Region") 
+
+
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
 
-### Chart B
+### Iteration 2 
 
 ```{r}
 class.z <- class %>% 
@@ -466,94 +554,8 @@ class.z.2010 %>%
                            "5" = "Requires 225 min/wk")) +
   guides(color = guide_legend(order = 1),
          shape = guide_legend(order = 2))
-```
 
 
-### Chart C
-
-```{r}
-mapdata1 <- import(here("data", "dfz.xlsx"))
-
-z_pal <- biscale::bi_pal_manual(val_1_1 = "#D9FAFA", val_1_2 = "#7AB1B1",
-val_2_1 = "#2BF7F7", val_2_2 = "#185252")
-
-scale.z1 <- mapdata1 %>% 
-  group_by(stnam, avg_timehs2, fips) %>% 
-  summarize(
-    grad = mean(state_avg, na.rm = TRUE)) %>% 
-  biscale::bi_class(x = grad, y = avg_timehs2, style = "quantile",
-           dim = 2)
-
-names(scale.z1)[1] <- "full"
-scale_join1 <- scale.z1 %>% left_join(usmap::statepop, by = "full")
-
-plot.z1 <- usmap::plot_usmap(data = scale.z1,
-                            values = "bi_class",
-                            labels = FALSE,
-                            label_color = "black") +
-  biscale::bi_scale_fill(pal = z_pal, dim = 2, guide = "none") +
-  scale_x_continuous(breaks = NULL) +
-  scale_y_continuous(breaks = NULL) +
-  theme(plot.title = element_text(margin = margin(b = 8), 
-                              color = "#ffffff",face = "bold",size = 9,
-                              hjust = 0.5,
-                              family = "Times New Roman"),
-    plot.subtitle = element_text(margin = margin(t=10,b = 25), 
-                                 color = "#ffffff", size = 6, family = "Times New Roman",
-                                 hjust = 0.5),
-    plot.caption =  element_text(margin = margin(t = 20), 
-                                 color = "#ffffff", size = 5, family = "Times New Roman",
-                                 hjust = 0.95),
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    legend.title = element_blank(),
-    axis.text.x    = element_blank(),
-    axis.text.y    = element_blank(),
-    panel.background = element_blank(), 
-    panel.grid.major = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor = element_blank(), 
-    plot.background = element_rect(fill = "white", color = NA), ##f3f3f3
-    panel.border = element_blank(),
-    plot.margin = unit(c(.5, .5, .5, .5), "cm"),
-    axis.ticks = element_blank())
-
-legend.z1 <- 
-  biscale::bi_legend(pal = z_pal,
-                     dim = 2,
-                     xlab = "Graduation Rate",
-                     ylab = "PA Time Requirement",
-                     size = 20) +
-  theme(rect = element_rect(fill = "black"),
-        panel.border = element_blank(),
-        axis.text = element_blank(),
-        plot.background = element_rect(fill = NA, color = NA),
-        axis.title.x = element_text(size = 9,
-                                    color = "black",
-                                    face = "bold"),
-        axis.title.y = element_text(size = 9,
-                                    color = "black",
-                                    face = "bold"),
-        legend.text = element_text(size = 5),
-        legend.text.align = 0)
-
-ggdraw() +
-  draw_plot(plot.z1, 0, 0 , 1, 1) +
-  draw_plot(legend.z1, 0.001 , 0.1, 0.3, 0.3) + 
-  draw_label("Source1 National Center for Education Statistics,
-             Source 2 National Cancer Institute",
-             color = "black", size = 7.5, angle = 0, x = 0.8, y = 0.1) + 
-  draw_label("More PE Requirements Generally Relate to Higher Graduation Rates", 
-             color = "black",
-             size = 14,
-             angle = 0,
-             x = 0.5,
-             y = 0.95,
-             fontface = "bold") + 
-  draw_label("Bivariate map showing the combination of the state 
-PE requirements and the average graduation rate", 
-             color = "black", size = 12, angle = 0, x =0.5, y = 0.9) + 
-    theme(plot.background = element_rect(fill = "white", color = NA))
 ```
 
 
