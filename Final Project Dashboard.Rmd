@@ -20,7 +20,7 @@ library(scales)
 library(gghighlight)
 library(colorspace)
 library(maps)
-library(albersusa)
+#library(albersusa)
 library(cowplot)
 library(patchwork)
 library(gganimate)
@@ -34,7 +34,7 @@ library(gganimate)
 
 # Graduation Rates and Fiscal data
 
-Column {data-width=350}
+Column {data-width=650}
 -----------------------------------------------------------------------
 
 ### Final
@@ -165,7 +165,7 @@ c <- data.e %>%      ## viz 3
 e + c + plot_annotation("State Revenue for Instruction and Support Services")
 ```
 
-Column {data-width=350}
+Column {data-width=250}
 -----------------------------------------------------------------------
 
 ### Iteration 1
@@ -174,7 +174,7 @@ Column {data-width=350}
 data.e %>%                             ## viz 1
   ggplot(aes(avgserv, state_name)) +
   geom_col(fill = "seagreen4") +
-  scale_x_log10("Average Revenue for Instruction",
+  scale_x_log10("Average Revenue for Support Services",
                 labels = scales::dollar) +
   theme_minimal()
 ```
