@@ -104,7 +104,7 @@ x <- mean(data.e$gradavg, na.rm = TRUE)
 data.e %>%                             ## viz 1
   ggplot(aes(avgserv, state_name)) +
   geom_col(fill = "seagreen4") +
-  scale_x_log10("Average Revenue for Instruction",
+  scale_x_log10("Average Revenue for Support Services",
                 labels = scales::dollar) +
   theme_minimal()
 
