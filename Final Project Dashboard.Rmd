@@ -2,9 +2,33 @@
 title: "Final Project Dashboard"
 output: 
   flexdashboard::flex_dashboard:
+    theme: flatly
+    social: menu
     orientation: columns
-    vertical_layout: fill
+    vertical_layout: scroll
+  html_document:
+    df_print: paged
 ---
+
+<style>
+.navbar {
+  background-color:#367bfc;
+  border-color:white;
+  icon: fa fa-github
+  href: https://github.com/esme-castro/dataviz_final
+}
+.navbar-brand {
+color:white!important;
+}
+</style>
+
+<style type="text/css">
+
+.chart-title {  /* chart_title  */
+   font-size: 15px
+
+</style>
+
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -24,22 +48,28 @@ library(albersusa)
 library(cowplot)
 library(patchwork)
 library(gganimate)
+my_width <- 9
+my_height<- 6
+data_height <-  600
 ```
 
 <!-- USA Facts {.sidebar} -->
 <!-- =========== -->
-<!-- Different variations of data vizualizations using the  -->
+<!-- Different variations of data vizualizations using the -->
 <!-- [USA Facts](https://usafacts.org), website and the [CLASS NCI](https://class.cancer.gov), website. -->
 
 
-# Graduation Rates and Fiscal data
+Graduate rates and fiscal data 
+=====================================  
 
-Column {data-width=350}
------------------------------------------------------------------------
+Row {.tabset data-height=600}
+-------------------------------------
 
-### Final
+Visualization 1
 
-```{r}
+### Final Iteration 
+
+```{r fig.width=my_width, fig.height=my_height}
 state_info.e <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
 state_info.e <- subset(state_info.e, select = c(1, 4, 9, 10))
@@ -165,8 +195,6 @@ c <- data.e %>%      ## viz 3
 e + c + plot_annotation("State Revenue for Instruction and Support Services")
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
 
 ### Iteration 1
 
@@ -198,12 +226,25 @@ data.e %>%                                  ## viz 2
 ```
 
 
-# Graduation Rates and Cohort data
+### Description 
 
-Column {data-width=650}
------------------------------------------------------------------------
+Iteration 1: This plot represents each state’s average revenue for support services. As a bar plot, with states side by side, it is easy to compare how states differ amongst each other (e.g., who spends more, who spends less). Since I thought this visual was perfect for demonstrating this relationship, I decided to move forward with refining it.
+
+Iteration 2: With this plot I have added a discrete color palette to also identify the regions of each state. As there are many states depicted on the y-axis, doing this provides ease of understanding to anyone who simply has a few seconds to view the plot. They can easily identify geographically where more or less money is being spent on support services. I also added a v-line that shows the average of revenue among all states so where a state stands across all other states can easily be understood. I found this handy, yet there was more to tell in this story, so I decided to continue to a final plot.
+
+Final Plot: The research question I was addressing was: How does support service revenue by state relate to graduation rates among those who typically receive support services? The intended audience to present my findings through data visualization was the general public. The goal of this was to understand if increased revenue to support services translates to increased graduation rates among those who need these services. If higher graduation rates were found among states with more revenue to support services, this could serve as support for prioritizing funding to support services. I spent a lot of time brainstorming and trying ideas to best depict this in one visualization but kept coming to road blocks with the data provided. When I learned about using patchwork to plot two visuals side by side, I thought it would be perfect for my research question and visual. A lot of time was spent on cleaning the data and extracting out only information that I needed. This project taught me to review all your data before brainstorming visual ideas, to maintain patience with GitHub and R, and that sometimes the simplest plot is the most effective.
+
+
+Graduation Rates and Cohort data
+=====================================  
+
+Row {.tabset data-height=600}
+-------------------------------------
+
+Visualization 1
 
 ### Final
+
 
 ```{r}
 group <- import(here("data", "cohorts_rate.xlsx"))
@@ -248,8 +289,6 @@ animate(p, fps = 2)
 
 ```
 
-Column {data-width=250}
------------------------------------------------------------------------
 
 ### Iteration 1
 
@@ -280,15 +319,34 @@ ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
 
 ```
 
+### Description 
 
-# Graduation Rates and CLASS data
+Iteration 1: This plot shows the average graduation rates for students in three different cohort groups which include, children with disabilities, economically disadvantaged, and limited English proficiency. This was displayed using a bar plot with three separate bins to represent each cohort group. Additionally, this plot shows this broken down by state in a side by side fashion so it is easy to compare rates across the different states. This is a very basic and simple visualization of this information which was the building block for my final plot. Each iteration was derived form this plot. 
 
-Column {data-width=650}
------------------------------------------------------------------------
+Iteration 2: This second version of my plot was the beginning of a cleaned up version of my first plot. I felt as though the information I am interested in was displayed quite well in my original; however, it needed a lot of clean up in order to more clearly understand the information presented in the plot. In this iteration, I decided to get rid of the x-axis labels and instead, place that descriptive information in the legend. This way, it is easier to depict what each cohort group is by looking at the group name directly next to the corresponding color instead of trying to read the small print at the bottom. This was much better but still needed a lot of work and a bit more appeal for the audience. The final plot was further built upon from this version. 
+
+Final plot: The final plot fully addresses my research question: Do individuals from different cohort groups differ in graduation rates? Are there similarities or differences in this rates across states? The audience I aimed to provide this information for was the general public. I wanted all individuals to have an understanding of what differences may lie in the different groups and therefore, it could create some future discussion for any needs and resources that may be necessary to increase any rates that are low and could use assistance. While graduation rates are a discussed topic among the general public, it is not as common to discuss graduation rates for individuals who lie in different groups that may require more attention to successfully reach graduation. The goal of presenting this information by state is to help facilitate discussion among individuals especially who are on the weaker side with those on the stronger side. I wanted to provide that information so that they could reach out and learn from each other how they incorporate programs and use resources to successfully get these individuals to graduate. In this final plot, I first decided to change my color scale to match my group so that we had a cohesive color throughout. In addition to the second iteration's addition of a legend, I felt the x-axis no longer needed a title as it was obvious from the legend itself. I added a y-axis title for clarification and included a descriptive title and subtitle to help the audience understand what was being presented in the plot. Finally, I used a gganimate function to add a transition piece. I chose to do this because it allows individuals to focus on one state at a time to see differences in cohort group in that state alone, but also to see how those rates change from state to state. A major takeaway I had from this project is don't give up even when you feel there is no hope. Also, I learned to use your resources and have patience with yourself because this is difficult and takes time but it will always work itself out. 
+
+
+
+
+
+USA Facts {.sidebar}
+===========
+Different variations of data vizualizations using the
+[USA Facts](https://usafacts.org), website and the [CLASS NCI](https://class.cancer.gov), website.
+
+Graduation Rates and CLASS data {date-icon="fa-solid fa-person-running"}
+=====================================  
+
+Row {.tabset data-height=600}
+-------------------------------------
+
+Visualization 1
 
 ### Final
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 
 class <- import(here("data", "Class20032019.xlsx")) %>% 
   janitor::clean_names() # CLASS Data Set
@@ -443,8 +501,6 @@ PE requirements and the average graduation rate",
     theme(plot.background = element_rect(fill = "white", color = NA))
 ```
 
-Column {data-width=250}
------------------------------------------------------------------------
 
 ### Iteration 1
 
@@ -458,24 +514,24 @@ data.z1 %>%
   geom_point() +
   theme_minimal()
 
-z1.regions %>% 
-  mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
-  ggplot(aes(state_avg, stnam, color = region_name)) +
-  geom_linerange(aes(xmin = state_avg - 1.96 * se,
-                     xmax = state_avg + 1.96 * se),
-                 color = "grey40") +
-  geom_point() +
-   geom_vline(xintercept = 78.17352,
-             color = "darkslateblue",
-             linetype = "solid",
-             size = 0.8) +
-  theme_minimal() +
-  labs(x = "Graduation Rate (%) - 2011",
-       y = "",
-       title = "State Graduation Rates",
-       subtitle = "By Region",
-       caption = "Vertical blue line indicates the graduation rate of the United States (78.17%)",
-       color = "Region") 
+# z1.regions %>% 
+#   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
+#   ggplot(aes(state_avg, stnam, color = region_name)) +
+#   geom_linerange(aes(xmin = state_avg - 1.96 * se,
+#                      xmax = state_avg + 1.96 * se),
+#                  color = "grey40") +
+#   geom_point() +
+#    geom_vline(xintercept = 78.17352,
+#              color = "darkslateblue",
+#              linetype = "solid",
+#              size = 0.8) +
+#   theme_minimal() +
+#   labs(x = "Graduation Rate (%) - 2011",
+#        y = "",
+#        title = "State Graduation Rates",
+#        subtitle = "By Region",
+#        caption = "Vertical blue line indicates the graduation rate of the United States (78.17%)",
+#        color = "Region") 
 
 
 ```
@@ -483,7 +539,7 @@ z1.regions %>%
 
 ### Iteration 2 
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 class.z <- class %>% 
   group_by(year, state_abbr) %>% 
   summarize(avg_timehs2 = mean(timehs2) #adding in the CLASS data. The timehs2 variable relates to State Policies regarding PE time requirements for High School
@@ -558,4 +614,11 @@ class.z.2010 %>%
 
 ```
 
+### Description 
+
+Iteration 1: This plot shows the state average graduate rates for all students by state, including the Bureau of Indian Affairs, ordered by the value of the x-axis. The rates are depicted in a dot plot with line ranges indicating the standard error for state graduation averages. This is a very simple depiction of the foundation of my final plot, state graduation rates. This plot was used to develop further code to present the Classification of Laws Associated with School Students data set in association with graduation rates. 
+
+Iteration 2: This plot expand upon the state graduation rates by adding a second variable to the mix, state physical education time requirement policy, by state. Regions are also introduced. Introducing regions allows the viewer to see how graduation rates may show trends by regional location throughout the United States. The PE policy component presents another way in which to parse through what may affect graduation rates. The inclusion of labelled v-lines depicting the national average (with upper and lower limits) allow the viewer to see how state averages fall along the national trends. This was almost good enough for a final plot, but there was just a bit too much to digest. The colors and shapes were too difficult to parse through and make a clear message with. The final iteration needed to incorporate a geographic component (so viewers could still come to certain conclusions about regional differences) while lowering the cognitive load.
+
+Final Plot: The final plot addresses the research question: How do state-level physical education policies influence high school graduation rates? The intended audience for this message was the public, however the final plot could be used and interpreted by policy makers at the local and state level. The goal of this visual was to make the case that physical education policy is important to consider when aiming to increase educational success, measured through graduation rate. Little attention is given to the influence of physical activity on academic success, despite a substantial backing in the literature. If the trend of the final plot was clear, the message would be clear, consider reexamining physical education policy at the state level to improve graduation rates. The final plot was difficult to complete in that I was having difficulties brainstorming how to plot two variables on a geographic map - while showing how they interact with each other. Using the {biscale} package enabled me to do this without making the cognitive load for interpretation overwhelming. I went through several iterations of the final plot as it was difficult to: A) Pick a color palette that would successfully incorporate both variables, including interaction trends; B) Manually format the legend and aspects ratios of each visual component within the plot (title, subtitle, legend, main plot; and C) Remove unneeded labels (state abbreviations). After all of this, I believe the final plot, PE Requirements Relate to Higher Graduation Rates, is near its potential. With more expertise, I would have liked to find a statistic that could be plotted to show these relationships a bit more clearly, but that can be something to work on outside of class requirements. Some takeaways from this project: Start early; become acquainted with data before starting any planning; lean on teamwork and reach out for help; GitHub is a powerful collaboration tool that I should learn to use more frequently; and, lastly, data visualization can be really difficult - give yourself grace
 
