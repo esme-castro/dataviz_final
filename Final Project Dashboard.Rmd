@@ -48,9 +48,9 @@ library(maps)
 library(cowplot)
 library(patchwork)
 library(gganimate)
-my_width <- 9
-my_height<- 6
-data_height <-  600
+my_width <- 13
+my_height<- 8.5
+data_height <-  800
 ```
 
 <!-- USA Facts {.sidebar} -->
@@ -62,7 +62,7 @@ data_height <-  600
 Graduate rates and fiscal data 
 =====================================  
 
-Row {.tabset data-height=600}
+Row {.tabset data-height=800}
 -------------------------------------
 
 Visualization 1
@@ -73,9 +73,6 @@ Visualization 1
 state_info.e <- readr::read_csv("https://github.com/kjhealy/fips-codes/raw/master/state_fips_master.csv") #state data with fipst
 
 state_info.e <- subset(state_info.e, select = c(1, 4, 9, 10))
-# just want the columns with unrepeated information to class_grad that can be used later (example: regions and divisions)
-state_info.e <- state_info.e %>% 
-   mutate(state_name = tolower(state_name))
 
 ###### Load fiscal data, clean & select columns #############################
 fiscal11 <- get_data("NCES_CCD_fiscal_district_2011") %>% 
@@ -191,7 +188,7 @@ e <- data.e %>%      ## viz 3
        title = "State Revenue for Support Services",
        caption = "Fiscal data collected in 2011",
        fill = "Region") +
-  theme(plot.title = element_text(face = "bold", size = 18,
+  theme(plot.title = element_text(face = "bold", size = 16,
                                   color = "gray80"),
         axis.title.x = element_text(face = "bold", size = 14,
                                     color = "gray80"),
@@ -237,7 +234,7 @@ c <- data.e %>%      ## viz 3
        caption = "Graduation rates an average among students with disabilities,
        economical disadvantaged, and limited English.",
        fill = "Region") +
-  theme(plot.title = element_text(face = "bold",size = 18,
+  theme(plot.title = element_text(face = "bold", size = 16,
                                   color = "gray80"),
         axis.title.x = element_text(face = "bold", size = 14,
                                     color = "gray80"),
@@ -260,7 +257,7 @@ e + c + plot_annotation("State Revenue for Support Services and Graduation Rates
 
 ### Iteration 1
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 data.e %>%                             ## viz 1
   ggplot(aes(avgserv, state_name)) +
   geom_col(fill = "seagreen4") +
@@ -272,7 +269,7 @@ data.e %>%                             ## viz 1
 
 ### Iteration 2
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 data.e %>%                             ## viz 2
   ggplot(aes(avgserv, state_name)) +
   geom_col(aes(fill = region_name)) +
@@ -308,7 +305,7 @@ Visualization 1
 ### Final
 
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 group <- import(here("data", "cohorts_rate.xlsx"))
 
 group.m1 <- group %>% 
@@ -354,7 +351,7 @@ animate(p, fps = 2)
 
 ### Iteration 1
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
   geom_bar(stat='identity') +
   theme_bw() +
@@ -366,7 +363,7 @@ ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
 
 ### Iteration 2
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
   geom_bar(stat='identity') +
   scale_fill_discrete( name = "Cohort groups", 
@@ -408,7 +405,7 @@ Visualization 1
 
 ### Final
 
-```{r fig.width=my_width, fig.height=my_height}
+```{r fig.width=15, fig.height=my_height}
 
 class <- import(here("data", "Class20032019.xlsx")) %>% 
   janitor::clean_names() # CLASS Data Set
@@ -566,7 +563,7 @@ PE requirements and the average graduation rate",
 
 ### Iteration 1
 
-```{r}
+```{r fig.width=my_width, fig.height=my_height}
 data.z1 %>% 
   mutate(stnam = fct_reorder(stnam, state_avg)) %>% 
   ggplot(aes(state_avg, stnam)) +
