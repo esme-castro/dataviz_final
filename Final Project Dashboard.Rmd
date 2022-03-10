@@ -44,7 +44,7 @@ library(scales)
 library(gghighlight)
 library(colorspace)
 library(maps)
-library(albersusa)
+#library(albersusa)
 library(cowplot)
 library(patchwork)
 library(gganimate)
@@ -102,40 +102,82 @@ grad_rates.e <- grad_rates.e %>%
   mutate(fips = readr::parse_number(fipst)) #rename fipst to fips
 
 grad_rates.e <- grad_rates.e %>% 
-  select(2,30)
+  select(2,4,7,13,30)
 
-grad_rates.e <- grad_rates.e %>% 
-  tidyr::separate(all_rate, c("lower", "upper"), sep = "-") %>% 
-  filter(!grepl("GE|GT|LE|PS", lower)) %>% 
+grad_rates.e <- grad_rates.e %>%   # for cwd_rate
+  tidyr::separate(cwd_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|LT|PS", lower)) %>% 
   mutate(
     upper = ifelse(is.na(upper), lower, upper),
     lower = as.numeric(lower),
     upper = as.numeric(upper)
   ) %>% 
   rowwise() %>% 
-  mutate(avggrad = mean(c(lower, upper))) %>% 
+  mutate(avggrad_cw = mean(c(lower, upper))) %>% 
   ungroup()
 
 grad_rates.e <- grad_rates.e %>% 
+  select(1, 4:7)
+
+grad_rates.e <- grad_rates.e %>%    ## for ecd_rate
+  tidyr::separate(ecd_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|LT|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(avggrad_ecd = mean(c(lower, upper))) %>% 
+  ungroup()
+
+grad_rates.e <- grad_rates.e %>% 
+  select(1, 4:7)
+
+grad_rates.e <- grad_rates.e %>%    ## for lep_rate
+  tidyr::separate(lep_rate, c("lower", "upper"), sep = "-") %>% 
+  filter(!grepl("GE|GT|LE|LT|PS", lower)) %>% 
+  mutate(
+    upper = ifelse(is.na(upper), lower, upper),
+    lower = as.numeric(lower),
+    upper = as.numeric(upper)
+  ) %>% 
+  rowwise() %>% 
+  mutate(avggrad_lep = mean(c(lower, upper))) %>% 
+  ungroup()
+
+grad_rates.e <- grad_rates.e %>% 
+  select(1, 4:7)
+
+grad_rates.e <- grad_rates.e %>% 
+  mutate_all(~replace(., is.na(.), 0))
+
+grad_rates.e <- grad_rates.e %>% 
   group_by(fips) %>% 
-  mutate(avggrad = mean(avggrad))
+  mutate(avg_cw = mean(avggrad_cw))
+
+grad_rates.e <- grad_rates.e %>% 
+  group_by(fips) %>% 
+  mutate(avg_ecd = mean(avggrad_ecd))
+
+grad_rates.e <- grad_rates.e %>% 
+  group_by(fips) %>% 
+  mutate(avg_lep = mean(avggrad_lep))
 
 grad_rates.e <- grad_rates.e[!duplicated(grad_rates.e$fips), ]
+
+grad_rates.e$avg_rate <- rowMeans(grad_rates.e[ , c(6,7,8)], na.rm=TRUE)
 
 data.e <- left_join(state_info.e, fiscal11)
 
 data.e <- left_join(data.e, grad_rates.e)
 
 data.e <- data.e %>% 
-    group_by(state_name) %>% 
-    mutate(gradavg = mean(c(lower, upper)))
-  
-data.e <- data.e %>% 
-  select(1, 3, 7, 9, 13)
+  select(1,3,9,14:17)
 
 # overall average for revenue
 y <- mean(data.e$avgserv)
-x <- mean(data.e$gradavg, na.rm = TRUE)
+x <- mean(data.e$avg_rate, na.rm = TRUE)
 
 e <- data.e %>%      ## viz 3
   ggplot(aes(avgserv, fct_reorder(state_name, avgserv))) +
@@ -149,9 +191,9 @@ e <- data.e %>%      ## viz 3
        title = "State Revenue for Support Services",
        caption = "Fiscal data collected in 2011",
        fill = "Region") +
-  theme(plot.title = element_text(face = "bold", size = 14,
+  theme(plot.title = element_text(face = "bold", size = 18,
                                   color = "gray80"),
-        axis.title.x = element_text(face = "bold", size = 11,
+        axis.title.x = element_text(face = "bold", size = 14,
                                     color = "gray80"),
         legend.title = element_text(face = "bold", color = "gray80"),
         legend.position = "none",
@@ -163,22 +205,42 @@ e <- data.e %>%      ## viz 3
         panel.grid.major = element_line(color = "gray80"), 
         panel.grid.minor = element_line(color = "gray30"),
         legend.text = element_text(colour = "gray80"),
-        plot.caption = element_text(color = "gray80"),
+        plot.caption = element_text(color = "gray80", size = 9),
         panel.grid.major.y = element_blank(),
         panel.grid.minor.x = element_blank())
 
 c <- data.e %>%      ## viz 3
-  ggplot(aes(gradavg, fct_reorder(state_name, gradavg))) +
+  mutate(state_name = fct_relevel(state_name,
+                                  "Oklahoma", "Kentucky", "Idaho", "Mississippi",
+                                  "Arizona", "South Dakota", "Georgia", "Louisiana",
+                                  "Alabama", "Alaska", "Nebraska", "Maine",
+                                  "New Hampshire", "Nevada", "Michigan", "New York",
+                                  "West Virginia", "Ohio", "North Dakota", "Florida",
+                                  "Minnesota", "Oregon", "Missouri", "Vermont",
+                                  "Virginia", "Montana", "Wyoming", "Iowa",
+                                  "South Carolina", "Connecticut", "Pennsylvania",
+                                  "Massachusetts", "Rhode Island", "Utah",
+                                  "Washington", "Arkansas", "Indiana", "Colorado",
+                                  "Illinois", "Tennessee", "Wisconsin", "Maryland",
+                                  "North Carolina", "Delaware", "New Mexico",
+                                  "New Jersey", "Hawaii", "Kansas", "Texas",
+                                  "California"
+                                  )) %>% 
+  ggplot(aes(avg_rate, state_name)) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
-  geom_vline(xintercept = x, lty = "dashed") +
+  geom_vline(xintercept = x, lty = "dashed", color = "gray80") +
   theme_minimal() +
   labs(y = "",
        x = "Average Graduation Rates",
        title = "Graduation Rates",
+       caption = "Graduation rates an average among students with disabilities,
+       economical disadvantaged, and limited English.",
        fill = "Region") +
-  theme(plot.title = element_text(face = "bold",size = 14, color = "gray80"),
-        axis.title.x = element_text(face = "bold", size = 11, color = "gray80"),
+  theme(plot.title = element_text(face = "bold",size = 18,
+                                  color = "gray80"),
+        axis.title.x = element_text(face = "bold", size = 14,
+                                    color = "gray80"),
         legend.title = element_text(face = "bold", color = "gray80"),
         axis.text.x = element_text(size = 10),
         axis.text.y = element_text(size = 12, face = "bold"),
@@ -188,11 +250,11 @@ c <- data.e %>%      ## viz 3
         panel.grid.major = element_line(color = "gray80"), 
         panel.grid.minor = element_line(color = "gray30"),
         legend.text = element_text(colour = "gray80"),
-        plot.caption = element_text(color = "gray80"),
+        plot.caption = element_text(color = "gray80", size = 9),
         panel.grid.major.y = element_blank(),
         panel.grid.minor.x = element_blank())
 
-e + c + plot_annotation("State Revenue for Instruction and Support Services")
+e + c + plot_annotation("State Revenue for Support Services and Graduation Rates")
 ```
 
 
@@ -202,7 +264,7 @@ e + c + plot_annotation("State Revenue for Instruction and Support Services")
 data.e %>%                             ## viz 1
   ggplot(aes(avgserv, state_name)) +
   geom_col(fill = "seagreen4") +
-  scale_x_log10("Average Revenue for Instruction",
+  scale_x_log10("Average Revenue for Support Services",
                 labels = scales::dollar) +
   theme_minimal()
 ```
@@ -211,18 +273,18 @@ data.e %>%                             ## viz 1
 ### Iteration 2
 
 ```{r}
-data.e %>%                                  ## viz 2
-  ggplot(aes(gradavg, state_name)) +
+data.e %>%                             ## viz 2
+  ggplot(aes(avgserv, state_name)) +
   geom_col(aes(fill = region_name)) +
   scale_fill_brewer() +
-  geom_vline(xintercept = x, lty = "dashed") +
-  scale_x_log10("Average Revenue for Instruction",
+  geom_vline(xintercept = y, lty = "dashed") +
+  scale_x_log10("Average Revenue for Support Services",
                 labels = scales::dollar) +
   theme_minimal() +
   labs(y = "",
-       title = "Average Graduation Rates",
+       title = "State Revenue for Support Services",
+       caption = "Fiscal data collected in 2011",
        fill = "Region")
-
 ```
 
 
