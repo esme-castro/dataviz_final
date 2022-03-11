@@ -44,10 +44,10 @@ library(scales)
 library(gghighlight)
 library(colorspace)
 library(maps)
-#library(albersusa)
 library(cowplot)
 library(patchwork)
 library(gganimate)
+library(gifski)
 my_width <- 13
 my_height<- 8.5
 data_height <-  800

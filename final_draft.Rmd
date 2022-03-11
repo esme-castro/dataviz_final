@@ -15,15 +15,14 @@ library(tidyverse)
 library(janitor)
 library(here)
 library(rio)
-library(ggtext)
 library(scales)
 library(gghighlight)
 library(colorspace)
 library(maps)
-library(albersusa)
 library(cowplot)
 library(patchwork)
 library(gganimate)
+library(gifski)
 ```
 
 ############# ESME VISUALS ################################################
