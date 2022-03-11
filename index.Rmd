@@ -299,7 +299,7 @@ Graduation Rates and Cohort data
 Row {.tabset data-height=600}
 -------------------------------------
 
-Do individuals from different cohort groups differ in graduation rates? Are there similarities or differences in this rates across states?
+**Do individuals from different cohort groups differ in graduation rates? Are there similarities or differences in this rates across states?**
 
 ### Final Iteration
 
@@ -392,7 +392,7 @@ Graduation Rates and CLASS data {date-icon="fa-solid fa-person-running"}
 Row {.tabset data-height=600}
 -------------------------------------
 
-How do state-level physical education policies influence high school graduation rates?
+**How do state-level physical education policies influence high school graduation rates?**
 
 ### Final Iteration
 
