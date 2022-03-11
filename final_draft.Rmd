@@ -681,7 +681,7 @@ p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
        subtitle = "Per each state") +
   # gganimate specific bits:
   transition_states(
-    stnam,
+    stabbr,
     transition_length = .5,
     state_length = 2, 
   ) +
