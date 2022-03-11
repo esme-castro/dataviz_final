@@ -307,7 +307,7 @@ Do individuals from different cohort groups differ in graduation rates? Are ther
 group <- import(here("data", "cohorts_rate.xlsx"))
 
 group.m1 <- group %>% 
-  select(stnam, state_cwd, state_lep, state_ecd)
+  select(stabbr, state_cwd, state_lep, state_ecd)
 
 group.m11 <- group.m1 %>% 
   pivot_longer(
@@ -329,14 +329,14 @@ p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
                           "state_lep" = "Limited English proficiency")) +
   scale_x_discrete(labels=c("", "", "")) +
   theme_bw() +
-  facet_wrap(~stnam) +
+  facet_wrap(~stabbr) +
   labs(x = "", 
        y = "Graduation rate", 
        title = "Graduation rates by special cohorts", 
        subtitle = "Per each state") +
   # gganimate specific bits:
   transition_states(
-    stnam,
+    stabbr,
     transition_length = .5,
     state_length = 2, 
   ) +
@@ -352,9 +352,7 @@ animate(p, fps = 2)
 ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
   geom_bar(stat='identity') +
   theme_bw() +
-  facet_wrap(~stnam)
-
-
+  facet_wrap(~stabbr)
 ```
 
 ### Iteration 2
@@ -369,12 +367,10 @@ ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
                           "state_lep" = "Limited English proficiency")) +
   scale_x_discrete(labels=c("", "", "")) +
   theme_bw() +
-  facet_wrap(~stnam) 
-
-
+  facet_wrap(~stabbr) 
 ```
 
-Row {.tabset data-height=800}
+Row {.tabset data-height=800, data-width=400}
 -------------------------------------
 
 ### Visual 2

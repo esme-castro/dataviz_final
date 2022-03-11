@@ -631,7 +631,7 @@ PE requirements and the average graduation rate",
 group <- import(here("data", "cohorts_rate.xlsx"))
 
 group.m1 <- group %>% 
-  select(stnam, state_cwd, state_lep, state_ecd)
+  select(stabbr, state_cwd, state_lep, state_ecd)
 
 group.m11 <- group.m1 %>% 
   pivot_longer(
@@ -648,7 +648,7 @@ group.mbind <- group.m1 %>%
 ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) + 
   geom_bar(stat='identity') +
   theme_bw() +
-  facet_wrap(~stnam)
+  facet_wrap(~stabbr)
 ```
 
 ```{r}
@@ -661,7 +661,7 @@ ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
                           "state_lep" = "Limited English proficiency")) +
   scale_x_discrete(labels=c("", "", "")) +
   theme_bw() +
-  facet_wrap(~stnam) 
+  facet_wrap(~stabbr) 
 ```
 
 ```{r}
@@ -674,7 +674,7 @@ p <- ggplot(group.m11, aes(x=cohort, y=rate, fill=cohort)) +
                           "state_lep" = "Limited English proficiency")) +
   scale_x_discrete(labels=c("", "", "")) +
   theme_bw() +
-  facet_wrap(~stnam) +
+  facet_wrap(~stabbr) +
   labs(x = "", 
        y = "Rate of graduates", 
        title = "Graduation rates by special cohorts", 
